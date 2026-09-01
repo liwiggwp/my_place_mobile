@@ -77,6 +77,23 @@ export const TasksView: React.FC<TasksViewProps> = ({
   const scrollLeftCat = useRef(0);
   const hasMovedCat = useRef(false);
 
+  // Live Clock Ticker (ticks every 2 seconds to update overdue cards in real time)
+  const [currentTimeStr, setCurrentTimeStr] = useState(() => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  });
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      setCurrentTimeStr(prev => (prev !== timeStr ? timeStr : prev));
+    };
+
+    const timer = setInterval(updateTime, 2000);
+    return () => clearInterval(timer);
+  }, []);
+
   // For Month View
   const [monthCursor, setMonthCursor] = useState(() => {
     const today = parseDateString(getTodayString());
@@ -492,6 +509,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
                 <TaskCard
                   key={task.id}
                   task={task}
+                  currentTimeStr={currentTimeStr}
                   theme={theme}
                   categories={categories}
                   onToggleTask={handleToggleWithFeedback}
@@ -538,6 +556,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
                       <TaskCard
                         key={task.id}
                         task={task}
+                        currentTimeStr={currentTimeStr}
                         theme={theme}
                         categories={categories}
                         onToggleTask={handleToggleWithFeedback}
@@ -655,6 +674,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
                         <TaskCard
                           key={t.id}
                           task={t}
+                          currentTimeStr={currentTimeStr}
                           theme={theme}
                           categories={categories}
                           onToggleTask={handleToggleWithFeedback}
@@ -783,6 +803,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
                 <TaskCard
                   key={t.id}
                   task={t}
+                  currentTimeStr={currentTimeStr}
                   theme={theme}
                   categories={categories}
                   onToggleTask={handleToggleWithFeedback}

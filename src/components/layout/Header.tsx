@@ -48,10 +48,10 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={onBackToHome}
-              className="p-2 rounded-2xl bg-slate-50 shadow-xs border border-slate-200 text-slate-700 active:scale-90 transition-transform flex items-center gap-1.5 cursor-pointer hover:bg-slate-100"
+              aria-label="Назад"
+              className="p-2.5 rounded-2xl bg-slate-50 shadow-xs border border-slate-200 text-slate-700 active:scale-90 transition-transform flex items-center justify-center cursor-pointer hover:bg-slate-100"
             >
               <ArrowLeft className="w-5 h-5" style={{ color: theme.primary }} />
-              <span className="text-xs font-bold text-slate-700 pr-1">Главная</span>
             </button>
             <h1 className="text-xl font-extrabold tracking-tight" style={{ color: theme.primary }}>
               {getTabTitle()}

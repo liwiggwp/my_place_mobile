@@ -18,7 +18,8 @@ import {
   Sparkles,
   Leaf,
   Moon,
-  Lightbulb
+  Lightbulb,
+  CheckSquare
 } from 'lucide-react';
 import { AddWidgetModal } from './AddWidgetModal';
 import { MyPlaceLogo } from '../common/MyPlaceLogo';
@@ -1306,7 +1307,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         >
           {renderEditControls(widget)}
           <div className="flex items-center justify-between pointer-events-none">
-            <span className="text-xl">📝</span>
+            <CheckSquare className="w-5 h-5 text-white/90 shrink-0" />
             <span className="text-[10px] font-black bg-white/20 px-2 py-0.5 rounded-full">{progressPercent}%</span>
           </div>
 
@@ -1341,8 +1342,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           {renderEditControls(widget)}
           <div className="flex items-start justify-between pointer-events-none">
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-lg border border-white/20">
-                📝
+              <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20">
+                <CheckSquare className="w-5 h-5 text-white" />
               </div>
               <div>
                 <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider block">Задачи на сегодня</span>

@@ -17,7 +17,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const tabs = [
     {
       id: 'home' as TabType,
-      label: 'Главная',
+      label: 'Обзор',
       icon: LayoutGrid
     },
     {

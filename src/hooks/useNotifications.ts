@@ -37,6 +37,32 @@ function playChimeSound() {
   }
 }
 
+// Persistent key tracker stored in localStorage
+function loadNotifiedKeys(): Set<string> {
+  try {
+    const saved = localStorage.getItem('myplace_notified_keys_v3');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        const today = getTodayString();
+        const todayKeys = parsed.filter((k: string) => k.includes(today));
+        return new Set(todayKeys);
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  return new Set();
+}
+
+function saveNotifiedKeys(keys: Set<string>) {
+  try {
+    localStorage.setItem('myplace_notified_keys_v3', JSON.stringify(Array.from(keys)));
+  } catch (e) {
+    // ignore
+  }
+}
+
 export function useNotifications(
   settings: NotificationSettings = {
     enabled: true,
@@ -74,7 +100,7 @@ export function useNotifications(
     type: 'pill' | 'water' | 'cycle' | 'task' | 'info';
   } | null>(null);
 
-  const notifiedTasksRef = useRef<Set<string>>(new Set());
+  const notifiedKeysRef = useRef<Set<string>>(loadNotifiedKeys());
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -84,7 +110,7 @@ export function useNotifications(
 
   const requestPermission = async (): Promise<boolean> => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
-      alert('Уведомления не поддерживаются вашим браузером. На iPhone добавьте приложение на экран «Домой» (Safari iOS 16.4+) для поддержки уведомлений.');
+      alert('Уведомления не поддерживаются вашим браузером. На iPhone добавьте приложение на экран «Домой» (Safari iOS 16.4+) для поддержки системных уведомлений.');
       return false;
     }
 
@@ -107,16 +133,18 @@ export function useNotifications(
   };
 
   const sendNotification = useCallback(
-    async (
+    (
       title: string,
       body: string,
       icon: string = '/favicon.svg',
       type: 'pill' | 'water' | 'cycle' | 'task' | 'info' = 'info'
     ) => {
       // 1. Play sound chime
-      playChimeSound();
+      if (!settings || settings.soundEnabled !== false) {
+        playChimeSound();
+      }
 
-      // 2. Always show rich in-app banner
+      // 2. Always show in-app banner immediately
       setActiveAlert({
         id: Math.random().toString(36).substring(2, 9),
         title,
@@ -125,7 +153,7 @@ export function useNotifications(
       });
 
       // 3. Play vibration if supported
-      if (typeof window !== 'undefined' && navigator.vibrate) {
+      if (typeof window !== 'undefined' && navigator.vibrate && (!settings || settings.vibrateEnabled !== false)) {
         try {
           navigator.vibrate([150, 80, 150]);
         } catch (e) {
@@ -133,31 +161,34 @@ export function useNotifications(
         }
       }
 
-      // 4. System Push / Desktop / Lockscreen Notification
+      // 4. System / Desktop / Push Notification (non-blocking)
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         try {
-          if ('serviceWorker' in navigator) {
-            const reg = await navigator.serviceWorker.ready;
-            if (reg && reg.showNotification) {
-              await reg.showNotification(title, {
-                body,
-                icon,
-                badge: '/favicon.svg',
-                vibrate: [200, 100, 200]
-              } as NotificationOptions);
-              return;
-            }
-          }
           new Notification(title, {
             body,
-            icon
+            icon: icon || '/favicon.svg'
           });
-        } catch (e) {
-          console.warn('Could not display system notification:', e);
+        } catch (err) {
+          try {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistration().then(reg => {
+                if (reg && reg.showNotification) {
+                  reg.showNotification(title, {
+                    body,
+                    icon: icon || '/favicon.svg',
+                    badge: '/favicon.svg',
+                    vibrate: [200, 100, 200]
+                  } as NotificationOptions);
+                }
+              }).catch(() => {});
+            }
+          } catch (e) {
+            console.warn('Could not display system notification:', e);
+          }
         }
       }
     },
-    []
+    [settings]
   );
 
   const testNotification = async () => {
@@ -196,40 +227,86 @@ export function useNotifications(
       const minutes = String(currentM).padStart(2, '0');
       const currentTimeStr = `${hours}:${minutes}`;
 
-      // 1. Check Task Reminders
+      let hasNewNotifiedKey = false;
+
+      // 1. Check Task Reminders & Overdue Tasks
       if (!settings || settings.taskReminders !== false) {
         tasks.forEach(task => {
-          if (task.date === todayStr && task.time && !task.completed) {
+          if (task.completed) return;
+
+          // Process timed tasks for today
+          if (task.date === todayStr && task.time) {
             const timeParts = task.time.split(':').map(Number);
             if (timeParts.length === 2 && !isNaN(timeParts[0]) && !isNaN(timeParts[1])) {
               const taskH = timeParts[0];
               const taskM = timeParts[1];
-              const reminderAdvance = task.reminderMinutesBefore || 0;
               const taskTimeInMinutes = taskH * 60 + taskM;
-              const triggerTimeInMinutes = taskTimeInMinutes - reminderAdvance;
+              const reminderAdvance = task.reminderMinutesBefore || 0;
 
-              // Check if current minute matches trigger minute
-              if (currentTimeInMinutes === triggerTimeInMinutes) {
-                const notifyKey = `${task.id}-${todayStr}-${task.time}-${triggerTimeInMinutes}`;
-                if (!notifiedTasksRef.current.has(notifyKey)) {
-                  notifiedTasksRef.current.add(notifyKey);
+              // A1. Advance Reminder (e.g. 5, 10, 15, 30, 60 minutes before)
+              if (reminderAdvance > 0) {
+                const advanceTriggerTime = taskTimeInMinutes - reminderAdvance;
+                if (currentTimeInMinutes >= advanceTriggerTime && currentTimeInMinutes < taskTimeInMinutes) {
+                  const advanceKey = `task-adv-${task.id}-${todayStr}-${task.time}-${reminderAdvance}`;
+                  if (!notifiedKeysRef.current.has(advanceKey)) {
+                    notifiedKeysRef.current.add(advanceKey);
+                    hasNewNotifiedKey = true;
 
-                  const titleText = reminderAdvance > 0
-                    ? `🔔 Скоро: ${task.title}`
-                    : `📋 Время задачи: ${task.title}`;
+                    sendNotification(
+                      `Скоро: ${task.title}`,
+                      `Начало через ${reminderAdvance} мин (в ${task.time}). ${task.description || ''}`,
+                      '/favicon.svg',
+                      'task'
+                    );
+                  }
+                }
+              }
 
-                  const bodyText = reminderAdvance > 0
-                    ? `Начало через ${reminderAdvance} мин (в ${task.time}). ${task.description || ''}`
-                    : task.description || 'Пора приступить к выполнению задачи!';
+              // A2. Exact Time Reminder (always fires at task.time)
+              if (currentTimeInMinutes >= taskTimeInMinutes && currentTimeInMinutes <= taskTimeInMinutes + 5) {
+                const exactKey = `task-exact-${task.id}-${todayStr}-${task.time}`;
+                if (!notifiedKeysRef.current.has(exactKey)) {
+                  notifiedKeysRef.current.add(exactKey);
+                  hasNewNotifiedKey = true;
 
                   sendNotification(
-                    titleText,
-                    bodyText,
+                    `Время задачи: ${task.title}`,
+                    task.description ? `${task.description} (запланировано на ${task.time})` : `Пора выполнить задачу (в ${task.time})!`,
                     '/favicon.svg',
                     'task'
                   );
                 }
               }
+            }
+          }
+
+          // B. Overdue Tasks Alert (Просроченные задачи)
+          const isPastDate = task.date < todayStr;
+          const isPastTimeToday =
+            task.date === todayStr &&
+            !!task.time &&
+            (() => {
+              const parts = task.time.split(':').map(Number);
+              if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                const taskMin = parts[0] * 60 + parts[1];
+                // Flag overdue if past the task time + 2 minutes grace period
+                return currentTimeInMinutes > taskMin + 2;
+              }
+              return false;
+            })();
+
+          if (isPastDate || isPastTimeToday) {
+            const overdueKey = `task-overdue-${task.id}-${task.date}-${task.time || 'notime'}-${todayStr}`;
+            if (!notifiedKeysRef.current.has(overdueKey)) {
+              notifiedKeysRef.current.add(overdueKey);
+              hasNewNotifiedKey = true;
+
+              sendNotification(
+                `Просрочена задача: ${task.title}`,
+                `Срок выполнения истёк (${task.date === todayStr ? 'в ' + task.time : task.date}). Не забудьте завершить или перенести её.`,
+                '/favicon.svg',
+                'task'
+              );
             }
           }
         });
@@ -245,10 +322,12 @@ export function useNotifications(
 
             if (!alreadyLogged) {
               const notifyKey = `pill-${pill.id}-${todayStr}-${currentTimeStr}`;
-              if (!notifiedTasksRef.current.has(notifyKey)) {
-                notifiedTasksRef.current.add(notifyKey);
+              if (!notifiedKeysRef.current.has(notifyKey)) {
+                notifiedKeysRef.current.add(notifyKey);
+                hasNewNotifiedKey = true;
+
                 sendNotification(
-                  `💊 Время принять: ${pill.name}`,
+                  `Время принять: ${pill.name}`,
                   `Дозировка: ${pill.dosage}. Не забудьте отметить в приложении!`,
                   '/favicon.svg',
                   'pill'
@@ -267,10 +346,12 @@ export function useNotifications(
         if (currentH >= startH && currentH <= endH && minutes === '00') {
           if (currentH % Math.max(1, Math.round(waterSettings.reminderIntervalHours || 2)) === 0) {
             const notifyKey = `water-${todayStr}-${currentH}`;
-            if (!notifiedTasksRef.current.has(notifyKey)) {
-              notifiedTasksRef.current.add(notifyKey);
+            if (!notifiedKeysRef.current.has(notifyKey)) {
+              notifiedKeysRef.current.add(notifyKey);
+              hasNewNotifiedKey = true;
+
               sendNotification(
-                '💧 Пора выпить воды!',
+                'Пора выпить воды!',
                 'Сделайте пару глотков чистой воды для поддержания баланса и энергии',
                 '/favicon.svg',
                 'water'
@@ -279,13 +360,28 @@ export function useNotifications(
           }
         }
       }
+
+      if (hasNewNotifiedKey) {
+        saveNotifiedKeys(notifiedKeysRef.current);
+      }
     };
 
-    // Run check immediately and then every 2 seconds
+    // Run check immediately and every 1 second
     checkReminders();
-    const interval = setInterval(checkReminders, 2000);
+    const interval = setInterval(checkReminders, 1000);
 
-    return () => clearInterval(interval);
+    const handleVisibilityOrFocus = () => {
+      checkReminders();
+    };
+
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+    };
   }, [settings, pills, pillLogs, waterSettings, tasks, sendNotification]);
 
   return {

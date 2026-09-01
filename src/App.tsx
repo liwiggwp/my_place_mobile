@@ -192,6 +192,7 @@ const defaultInitialData: AppData = {
     vibrateEnabled: true,
     pillReminders: true,
     waterReminders: true,
+    taskReminders: true,
     cycleReminders: true,
     cycleReminderDaysBefore: 2
   }

@@ -5,6 +5,7 @@ import { Check, Clock, ChevronDown, ChevronUp, Edit3, Trash2, ListChecks, Bell }
 
 interface TaskCardProps {
   task: TaskItem;
+  currentTimeStr?: string;
   theme?: DualColorTheme;
   categories?: TaskCategoryItem[];
   onToggleTask: (taskId: string) => void;
@@ -15,6 +16,7 @@ interface TaskCardProps {
 
 export const TaskCard: React.FC<TaskCardProps> = ({
   task,
+  currentTimeStr,
   theme = { primary: '#203A5F', secondary: '#595959' },
   categories = [],
   onToggleTask,
@@ -25,15 +27,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const todayStr = getTodayString();
-  const now = new Date();
-  const currentHours = String(now.getHours()).padStart(2, '0');
-  const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-  const currentTimeStr = `${currentHours}:${currentMinutes}`;
+  const effectiveCurrentTimeStr = currentTimeStr || (() => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  })();
 
   // Overdue Check: not completed AND (date in past OR (today and time in past))
   const isOverdue = !task.completed && (
     task.date < todayStr ||
-    (task.date === todayStr && !!task.time && task.time < currentTimeStr)
+    (task.date === todayStr && !!task.time && task.time < effectiveCurrentTimeStr)
   );
 
   // Priority Visual Configuration (Clean badges with colored dots, no emojis)
