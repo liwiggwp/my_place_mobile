@@ -30,6 +30,7 @@ interface HomeDashboardProps {
   onNavigate: (tab: 'cycle' | 'pills' | 'water' | 'tasks' | 'settings') => void;
   onQuickAddWater: (amount: number) => void;
   onLogPillTaken?: (pillId: string, scheduledTime: string) => void;
+  onToggleTask?: (taskId: string) => void;
   onOpenProfile: () => void;
   onUpdateWidgets: (newConfig: WidgetConfig[]) => void;
 }
@@ -58,6 +59,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onNavigate,
   onQuickAddWater,
   onLogPillTaken,
+  onToggleTask,
   onOpenProfile,
   onUpdateWidgets
 }) => {
@@ -66,6 +68,22 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const [targetSlotForAdd, setTargetSlotForAdd] = useState<{ row: number; col: 0 | 1 } | null>(null);
   const [dragSession, setDragSession] = useState<DragSession | null>(null);
   const [activePhotoUploadWidgetId, setActivePhotoUploadWidgetId] = useState<string | null>(null);
+
+  const [showGreeting, setShowGreeting] = useState(() => {
+    try {
+      const saved = localStorage.getItem('myplace_show_home_greeting');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const handleDismissGreeting = () => {
+    setShowGreeting(false);
+    try {
+      localStorage.setItem('myplace_show_home_greeting', JSON.stringify(false));
+    } catch {}
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const longPressTimer = useRef<number | null>(null);
@@ -1363,18 +1381,34 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           </div>
 
           {/* Top 2 Active Tasks preview */}
-          <div className="mt-2.5 space-y-1.5 pointer-events-none">
+          <div className="mt-2.5 space-y-1.5">
             {todayTasksList.length > 0 ? (
               todayTasksList.slice(0, 2).map(t => (
-                <div key={t.id} className="flex items-center gap-2 text-xs bg-white/10 rounded-xl px-2.5 py-1.5 backdrop-blur-xs">
-                  <div className={`w-3.5 h-3.5 rounded-md border flex items-center justify-center ${t.completed ? 'bg-white text-slate-900 border-white' : 'border-white/60'}`}>
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation();
+                    if (!isEditing && onToggleTask) {
+                      onToggleTask(t.id);
+                    }
+                  }}
+                  className="w-full flex items-center gap-2 text-xs bg-white/10 hover:bg-white/20 active:scale-[0.98] rounded-xl px-2.5 py-1.5 backdrop-blur-xs transition-all cursor-pointer pointer-events-auto text-left"
+                >
+                  <div
+                    className={`w-3.5 h-3.5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                      t.completed ? 'bg-white text-slate-900 border-white' : 'border-white/60 hover:border-white'
+                    }`}
+                  >
                     {t.completed && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                   </div>
-                  <span className={`truncate ${t.completed ? 'line-through opacity-70' : 'font-semibold'}`}>{t.title}</span>
-                </div>
+                  <span className={`truncate flex-1 ${t.completed ? 'line-through opacity-70' : 'font-semibold'}`}>
+                    {t.title}
+                  </span>
+                </button>
               ))
             ) : (
-              <p className="text-xs text-white/80 py-1">Все задачи выполнены или еще не запланированы</p>
+              <p className="text-xs text-white/80 py-1 pointer-events-none">Все задачи выполнены или еще не запланированы</p>
             )}
           </div>
         </div>
@@ -1413,19 +1447,35 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
         {/* Task list preview */}
-        <div className="space-y-1.5 pointer-events-none">
+        <div className="space-y-1.5">
           {todayTasksList.length > 0 ? (
-            todayTasksList.slice(0, 3).map(t => (
-              <div key={t.id} className="flex items-center gap-2 text-xs bg-white/10 rounded-xl px-3 py-2 backdrop-blur-xs">
-                <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${t.completed ? 'bg-white text-slate-900 border-white' : 'border-white/60'}`}>
+            todayTasksList.slice(0, 4).map(t => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={e => {
+                  e.stopPropagation();
+                  if (!isEditing && onToggleTask) {
+                    onToggleTask(t.id);
+                  }
+                }}
+                className="w-full flex items-center gap-2.5 text-xs bg-white/10 hover:bg-white/20 active:scale-[0.98] rounded-xl px-3 py-2 backdrop-blur-xs transition-all cursor-pointer pointer-events-auto text-left"
+              >
+                <div
+                  className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                    t.completed ? 'bg-white text-slate-900 border-white' : 'border-white/60 hover:border-white'
+                  }`}
+                >
                   {t.completed && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
-                <span className={`truncate flex-1 ${t.completed ? 'line-through opacity-70' : 'font-semibold'}`}>{t.title}</span>
-                {t.time && <span className="text-[10px] text-white/80 shrink-0">{t.time}</span>}
-              </div>
+                <span className={`truncate flex-1 ${t.completed ? 'line-through opacity-70' : 'font-semibold'}`}>
+                  {t.title}
+                </span>
+                {t.time && <span className="text-[10px] text-white/80 shrink-0 font-mono">{t.time}</span>}
+              </button>
             ))
           ) : (
-            <p className="text-xs text-white/80 py-1">Нажмите, чтобы открыть планировщик задач</p>
+            <p className="text-xs text-white/80 py-1 pointer-events-none">Нажмите, чтобы открыть планировщик задач</p>
           )}
         </div>
 
@@ -1606,8 +1656,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             <span>Готово</span>
           </button>
         </div>
-      ) : (
-        <div className="p-4 rounded-3xl glass-card border border-slate-200/80 shadow-xs flex items-center justify-between gap-2">
+      ) : showGreeting ? (
+        <div className="p-4 rounded-3xl glass-card border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 animate-fade-in">
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={onOpenProfile}
@@ -1629,15 +1679,24 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={() => setIsEditing(true)}
-            style={{ color: globalTheme.primary }}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all hover:bg-slate-200 shadow-2xs cursor-pointer border border-slate-200 shrink-0"
-          >
-            <span>Изменить</span>
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => setIsEditing(true)}
+              style={{ color: globalTheme.primary }}
+              className="px-3 py-1.5 rounded-xl bg-slate-100 font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all hover:bg-slate-200 shadow-2xs cursor-pointer border border-slate-200"
+            >
+              <span>Изменить</span>
+            </button>
+            <button
+              onClick={handleDismissGreeting}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:scale-90 transition-all cursor-pointer"
+              title="Убрать приветствие"
+            >
+              <X className="w-4 h-4 stroke-[2.5]" />
+            </button>
+          </div>
         </div>
-      )}
+      ) : null}
 
       {/* 2D GRID OF WIDGETS, PHOTOS, SPACERS & EMPTY SLOTS */}
       <div className="space-y-3.5">

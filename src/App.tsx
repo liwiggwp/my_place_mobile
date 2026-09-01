@@ -723,6 +723,7 @@ export function App() {
             }}
             onQuickAddWater={amount => handleAddWater(amount, 'water')}
             onLogPillTaken={(pillId, scheduledTime) => handleLogPillStatus(pillId, scheduledTime, 'taken')}
+            onToggleTask={handleToggleTask}
             onOpenProfile={() => setIsProfileOpen(true)}
             onUpdateWidgets={handleSaveWidgetsConfig}
           />
@@ -746,6 +747,7 @@ export function App() {
             }}
             onQuickAddWater={amount => handleAddWater(amount, 'water')}
             onLogPillTaken={(pillId, scheduledTime) => handleLogPillStatus(pillId, scheduledTime, 'taken')}
+            onToggleTask={handleToggleTask}
           />
         )}
 

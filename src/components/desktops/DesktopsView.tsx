@@ -36,6 +36,7 @@ interface DesktopsViewProps {
   onNavigate: (tab: TabType) => void;
   onQuickAddWater: (amount: number) => void;
   onLogPillTaken?: (pillId: string, scheduledTime: string) => void;
+  onToggleTask?: (taskId: string) => void;
 }
 
 interface DragSession {
@@ -65,7 +66,8 @@ export const DesktopsView: React.FC<DesktopsViewProps> = ({
   onDeleteDesktop,
   onNavigate,
   onQuickAddWater,
-  onLogPillTaken
+  onLogPillTaken,
+  onToggleTask
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -825,16 +827,34 @@ export const DesktopsView: React.FC<DesktopsViewProps> = ({
             </div>
           </div>
 
-          <div className="mt-3 space-y-1.5 pointer-events-none">
+          <div className="mt-3 space-y-1.5">
             {todayTasksList.length > 0 ? (
               todayTasksList.slice(0, 2).map(task => (
-                <div key={task.id} className="p-2 rounded-xl bg-white/10 backdrop-blur-xs flex items-center gap-2 text-xs">
-                  <span className="w-3.5 h-3.5 rounded-md border border-white/40 shrink-0" />
-                  <span className="truncate font-medium">{task.title}</span>
-                </div>
+                <button
+                  key={task.id}
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation();
+                    if (!isEditing && onToggleTask) {
+                      onToggleTask(task.id);
+                    }
+                  }}
+                  className="w-full p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-[0.98] backdrop-blur-xs flex items-center gap-2 text-xs transition-all cursor-pointer pointer-events-auto text-left"
+                >
+                  <div
+                    className={`w-3.5 h-3.5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                      task.completed ? 'bg-white text-slate-900 border-white' : 'border-white/60 hover:border-white'
+                    }`}
+                  >
+                    {task.completed && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                  </div>
+                  <span className={`truncate font-medium flex-1 ${task.completed ? 'line-through opacity-70' : ''}`}>
+                    {task.title}
+                  </span>
+                </button>
               ))
             ) : (
-              <p className="text-xs text-white/80 py-1">Все задачи выполнены! Отличный день.</p>
+              <p className="text-xs text-white/80 py-1 pointer-events-none">Все задачи выполнены! Отличный день.</p>
             )}
           </div>
         </div>
@@ -869,24 +889,39 @@ export const DesktopsView: React.FC<DesktopsViewProps> = ({
           </div>
         </div>
 
-        <div className="my-3 space-y-2 pointer-events-none">
+        <div className="my-3 space-y-2">
           {todayTasksList.length > 0 ? (
-            todayTasksList.map(task => (
-              <div
+            todayTasksList.slice(0, 5).map(task => (
+              <button
                 key={task.id}
-                className="p-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-between text-xs"
+                type="button"
+                onClick={e => {
+                  e.stopPropagation();
+                  if (!isEditing && onToggleTask) {
+                    onToggleTask(task.id);
+                  }
+                }}
+                className="w-full p-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-[0.98] backdrop-blur-md border border-white/10 flex items-center justify-between text-xs transition-all cursor-pointer pointer-events-auto text-left"
               >
                 <div className="flex items-center gap-2 truncate">
-                  <span className="w-4 h-4 rounded-md border border-white/40 shrink-0" />
-                  <span className="truncate font-medium">{task.title}</span>
+                  <div
+                    className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                      task.completed ? 'bg-white text-slate-900 border-white' : 'border-white/60 hover:border-white'
+                    }`}
+                  >
+                    {task.completed && <Check className="w-3 h-3 stroke-[3]" />}
+                  </div>
+                  <span className={`truncate font-medium ${task.completed ? 'line-through opacity-70' : ''}`}>
+                    {task.title}
+                  </span>
                 </div>
                 {task.time && (
                   <span className="text-[10px] text-white/70 font-mono ml-2 shrink-0">{task.time}</span>
                 )}
-              </div>
+              </button>
             ))
           ) : (
-            <p className="text-xs text-white/80 py-1">Нет активных задач. Нажмите для добавления.</p>
+            <p className="text-xs text-white/80 py-1 pointer-events-none">Нет активных задач. Нажмите для добавления.</p>
           )}
         </div>
 
