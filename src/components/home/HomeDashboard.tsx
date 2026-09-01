@@ -87,6 +87,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const longPressTimer = useRef<number | null>(null);
+  const pointerStartPos = useRef<{ x: number; y: number } | null>(null);
   const dragSessionRef = useRef<DragSession | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -126,6 +127,16 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   // Global window listener for calm, smooth iOS 18 Drag & Drop
   useEffect(() => {
     const onWindowPointerMove = (e: PointerEvent) => {
+      // Cancel long press if user moved finger/cursor (e.g. scrolling or tapping)
+      if (pointerStartPos.current && longPressTimer.current) {
+        const moveDist = Math.hypot(e.clientX - pointerStartPos.current.x, e.clientY - pointerStartPos.current.y);
+        if (moveDist > 8) {
+          clearTimeout(longPressTimer.current);
+          longPressTimer.current = null;
+          pointerStartPos.current = null;
+        }
+      }
+
       const session = dragSessionRef.current;
       if (!isEditing || !session) return;
 
@@ -217,10 +228,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     if (target.closest('button')) return;
 
     if (!isEditing) {
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+      pointerStartPos.current = { x: e.clientX, y: e.clientY };
       longPressTimer.current = window.setTimeout(() => {
         setIsEditing(true);
         if (navigator.vibrate) navigator.vibrate(40);
-      }, 450);
+        longPressTimer.current = null;
+        pointerStartPos.current = null;
+      }, 800);
       return;
     }
 
@@ -241,6 +256,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
+    pointerStartPos.current = null;
   };
 
   // Safe Size Cycle with Automatic Collision Prevention

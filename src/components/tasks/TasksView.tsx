@@ -398,47 +398,6 @@ export const TasksView: React.FC<TasksViewProps> = ({
             })}
           </div>
 
-          {/* Daily Progress Banner */}
-          <div
-            style={{
-              background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`
-            }}
-            className="p-5 rounded-3xl text-white shadow-md shadow-slate-200/50 flex items-center justify-between relative overflow-hidden"
-          >
-            <div className="min-w-0 pr-2">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-md">
-                  {selectedDate === todayStr ? 'План на сегодня' : formatFullRussianDate(selectedDate)}
-                </span>
-                {selectedDate !== todayStr && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDate(todayStr)}
-                    className="text-[10px] font-bold text-white underline cursor-pointer hover:opacity-80"
-                  >
-                    Перейти на сегодня
-                  </button>
-                )}
-              </div>
-              <h3 className="text-xl font-black tracking-tight mt-1.5 truncate">
-                {totalDayTasksCount === 0
-                  ? 'Нет запланированных задач'
-                  : completedDayTasksCount === totalDayTasksCount
-                  ? 'Все задачи выполнены'
-                  : `Выполнено ${completedDayTasksCount} из ${totalDayTasksCount}`}
-              </h3>
-              <p className="text-xs text-white/80 mt-0.5">
-                {totalDayTasksCount === 0
-                  ? 'Нажмите «+ Новая задача», чтобы добавить'
-                  : `${dayProgressPercent}% дневного плана завершено`}
-              </p>
-            </div>
-
-            <div className="min-w-[56px] px-3 py-2 rounded-2xl bg-white/20 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center shrink-0 whitespace-nowrap">
-              <span className="text-base font-black">{dayProgressPercent}%</span>
-            </div>
-          </div>
-
           {/* Category Filter Pills (with gesture/mouse drag-to-scroll & manage button) */}
           <div
             ref={categoriesRef}
@@ -485,74 +444,134 @@ export const TasksView: React.FC<TasksViewProps> = ({
             )}
           </div>
 
-          {/* Tasks List */}
-          <div className="space-y-3">
-            {/* Active Tasks */}
-            {activeDayTasks.length > 0 ? (
-              activeDayTasks.map(task => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  currentTimeStr={currentTimeStr}
-                  theme={theme}
-                  categories={categories}
-                  onToggleTask={handleToggleWithFeedback}
-                  onToggleSubtask={onToggleSubtask}
-                  onEdit={onEditTask}
-                  onDelete={onDeleteTask}
-                />
-              ))
-            ) : totalDayTasksCount === 0 ? (
-              <div className="p-8 rounded-3xl glass-card text-center text-slate-400 space-y-2 border border-slate-200">
-                <div className="w-12 h-12 mx-auto rounded-2xl bg-slate-100 flex items-center justify-center">
-                  <CheckSquare className="w-6 h-6 text-slate-400" />
-                </div>
-                <h4 className="text-sm font-bold text-slate-800">На этот день задач нет</h4>
-                <p className="text-xs text-[#595959]">
-                  Запланируйте дела, тренировки, встречи или покупки
-                </p>
-                <button
-                  type="button"
-                  onClick={() => onAddTask(selectedDate)}
-                  style={{ backgroundColor: theme.primary }}
-                  className="mt-2 px-4 py-2 rounded-2xl text-white font-bold text-xs shadow-md shadow-slate-300 active:scale-95 cursor-pointer"
-                >
-                  + Создать первую задачу
-                </button>
-              </div>
-            ) : null}
-
-            {/* Completed Tasks Accordion */}
-            {completedDayTasks.length > 0 && (
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCompleted(!showCompleted)}
-                  className="flex items-center justify-between w-full px-2 py-1 text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer"
-                >
-                  <span>Завершённые ({completedDayTasks.length})</span>
-                  <span>{showCompleted ? 'Скрыть' : 'Показать'}</span>
-                </button>
-
-                {showCompleted && (
-                  <div className="space-y-2.5 mt-2">
-                    {completedDayTasks.map(task => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        currentTimeStr={currentTimeStr}
-                        theme={theme}
-                        categories={categories}
-                        onToggleTask={handleToggleWithFeedback}
-                        onToggleSubtask={onToggleSubtask}
-                        onEdit={onEditTask}
-                        onDelete={onDeleteTask}
-                      />
-                    ))}
+          {/* Day Content: 2-Column Responsive for Tablets */}
+          <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-5">
+            {/* Left Column: Progress banner & Add task button */}
+            <div className="space-y-4">
+              {/* Daily Progress Banner */}
+              <div
+                style={{
+                  background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`
+                }}
+                className="p-5 rounded-3xl text-white shadow-md shadow-slate-200/50 flex items-center justify-between relative overflow-hidden"
+              >
+                <div className="min-w-0 pr-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-md">
+                      {selectedDate === todayStr ? 'План на сегодня' : formatFullRussianDate(selectedDate)}
+                    </span>
+                    {selectedDate !== todayStr && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDate(todayStr)}
+                        className="text-[10px] font-bold text-white underline cursor-pointer hover:opacity-80"
+                      >
+                        Перейти на сегодня
+                      </button>
+                    )}
                   </div>
-                )}
+                  <h3 className="text-xl font-black tracking-tight mt-1.5 truncate">
+                    {totalDayTasksCount === 0
+                      ? 'Нет запланированных задач'
+                      : completedDayTasksCount === totalDayTasksCount
+                      ? 'Все задачи выполнены'
+                      : `Выполнено ${completedDayTasksCount} из ${totalDayTasksCount}`}
+                  </h3>
+                  <p className="text-xs text-white/80 mt-0.5">
+                    {totalDayTasksCount === 0
+                      ? 'Нажмите «+ Новая задача», чтобы добавить'
+                      : `${dayProgressPercent}% дневного плана завершено`}
+                  </p>
+                </div>
+
+                <div className="min-w-[56px] px-3 py-2 rounded-2xl bg-white/20 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center shrink-0 whitespace-nowrap">
+                  <span className="text-base font-black">{dayProgressPercent}%</span>
+                </div>
               </div>
-            )}
+
+              {/* Tablet Quick Action */}
+              <button
+                type="button"
+                onClick={() => onAddTask(selectedDate)}
+                style={{
+                  background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`
+                }}
+                className="w-full py-3.5 px-4 rounded-2xl text-white font-bold text-sm shadow-md shadow-slate-300 flex items-center justify-center gap-2 active:scale-95 transition-transform cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Новая задача</span>
+              </button>
+            </div>
+
+            {/* Right Column: Tasks List */}
+            <div className="space-y-3">
+              {/* Active Tasks */}
+              {activeDayTasks.length > 0 ? (
+                activeDayTasks.map(task => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    currentTimeStr={currentTimeStr}
+                    theme={theme}
+                    categories={categories}
+                    onToggleTask={handleToggleWithFeedback}
+                    onToggleSubtask={onToggleSubtask}
+                    onEdit={onEditTask}
+                    onDelete={onDeleteTask}
+                  />
+                ))
+              ) : totalDayTasksCount === 0 ? (
+                <div className="p-8 rounded-3xl glass-card text-center text-slate-400 space-y-2 border border-slate-200">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-slate-100 flex items-center justify-center">
+                    <CheckSquare className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-800">На этот день задач нет</h4>
+                  <p className="text-xs text-[#595959]">
+                    Запланируйте дела, тренировки, встречи или покупки
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onAddTask(selectedDate)}
+                    style={{ backgroundColor: theme.primary }}
+                    className="mt-2 px-4 py-2 rounded-2xl text-white font-bold text-xs shadow-md shadow-slate-300 active:scale-95 cursor-pointer"
+                  >
+                    + Создать первую задачу
+                  </button>
+                </div>
+              ) : null}
+
+              {/* Completed Tasks Accordion */}
+              {completedDayTasks.length > 0 && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCompleted(!showCompleted)}
+                    className="flex items-center justify-between w-full px-2 py-1 text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer"
+                  >
+                    <span>Завершённые ({completedDayTasks.length})</span>
+                    <span>{showCompleted ? 'Скрыть' : 'Показать'}</span>
+                  </button>
+
+                  {showCompleted && (
+                    <div className="space-y-2.5 mt-2">
+                      {completedDayTasks.map(task => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          currentTimeStr={currentTimeStr}
+                          theme={theme}
+                          categories={categories}
+                          onToggleTask={handleToggleWithFeedback}
+                          onToggleSubtask={onToggleSubtask}
+                          onEdit={onEditTask}
+                          onDelete={onDeleteTask}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

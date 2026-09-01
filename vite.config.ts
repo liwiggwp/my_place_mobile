@@ -14,9 +14,8 @@ export default defineConfig({
       manifest: {
         name: 'MyPlace: Цикл, Таблетки, Вода',
         short_name: 'MyPlace',
-        description: 'Ваше личное приватное пространство для отслеживания цикла, приема таблеток и водного баланса',
-        theme_color: '#fff1f2',
-        background_color: '#fff1f2',
+        theme_color: '#203A5F',
+        background_color: '#f8fafc',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',

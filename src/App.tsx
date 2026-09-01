@@ -61,7 +61,6 @@ import { WaterCalendar } from './components/water/WaterCalendar';
 // Settings, Profile & Theme Components
 import { SettingsView } from './components/settings/SettingsView';
 import { OnboardingWizardModal } from './components/settings/OnboardingWizardModal';
-import { DataImportModal } from './components/settings/DataImportModal';
 import { ProfileModal } from './components/profile/ProfileModal';
 import { ThemeCustomizerModal } from './components/theme/ThemeCustomizerModal';
 
@@ -224,7 +223,6 @@ export function App() {
   const [isWaterGoalModalOpen, setIsWaterGoalModalOpen] = useState(false);
   const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
-  const [isDataImportOpen, setIsDataImportOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
 
@@ -288,6 +286,76 @@ export function App() {
       return changed ? { ...prev, pills: updatedPills } : prev;
     });
   }, [todayStr, setAppData]);
+
+  // iOS Edge Swipe Left-to-Right gesture listener to Go Back
+  useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+    let isEdgeSwipe = false;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      // Only initiate if swipe starts near the left screen edge (within 50px)
+      if (touch.clientX <= 50) {
+        startX = touch.clientX;
+        startY = touch.clientY;
+        isEdgeSwipe = true;
+      } else {
+        isEdgeSwipe = false;
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!isEdgeSwipe || e.changedTouches.length !== 1) return;
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
+
+      // Swiped horizontally to the right by at least 65px with low vertical slope
+      if (deltaX > 65 && Math.abs(deltaY) < 60) {
+        // Priority 1: Close active modal if any is open
+        if (isSymptomModalOpen) { setIsSymptomModalOpen(false); triggerVibrate(); return; }
+        if (isPillModalOpen) { setIsPillModalOpen(false); triggerVibrate(); return; }
+        if (isTaskModalOpen) { setIsTaskModalOpen(false); triggerVibrate(); return; }
+        if (isManageCategoriesOpen) { setIsManageCategoriesOpen(false); triggerVibrate(); return; }
+        if (isWaterGoalModalOpen) { setIsWaterGoalModalOpen(false); triggerVibrate(); return; }
+        if (isProfileOpen) { setIsProfileOpen(false); triggerVibrate(); return; }
+        if (isThemeCustomizerOpen) { setIsThemeCustomizerOpen(false); triggerVibrate(); return; }
+        if (isInstallGuideOpen) { setIsInstallGuideOpen(false); triggerVibrate(); return; }
+        if (isWizardOpen) { setIsWizardOpen(false); triggerVibrate(); return; }
+
+        // Priority 2: Navigate back to home if on subscreen or settings/desktops
+        if (currentTab !== 'home') {
+          playSoftClick();
+          setCurrentTab('home');
+        }
+      }
+      isEdgeSwipe = false;
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [
+    currentTab,
+    isSymptomModalOpen,
+    isPillModalOpen,
+    isTaskModalOpen,
+    isManageCategoriesOpen,
+    isWaterGoalModalOpen,
+    isProfileOpen,
+    isThemeCustomizerOpen,
+    isInstallGuideOpen,
+    isWizardOpen,
+    playSoftClick,
+    triggerVibrate
+  ]);
+
   const prediction = getCyclePrediction(appData.periods, appData.cycleSettings, selectedDate);
   const latestPeriod = getLatestPeriod(appData.periods);
 
@@ -661,26 +729,41 @@ export function App() {
     }));
   };
 
-  const handleImportPeriods = (importedPeriods: CyclePeriod[]) => {
-    setAppData(prev => {
-      const existingDates = new Set(prev.periods.map(p => p.startDate));
-      const newOnly = importedPeriods.filter(p => !existingDates.has(p.startDate));
-      return {
-        ...prev,
-        periods: [...newOnly, ...prev.periods].sort((a, b) => b.startDate.localeCompare(a.startDate))
-      };
-    });
-  };
-
   const handleClearExamplesOnly = () => {
-    if (confirm('Очистить тестовые примеры лекарств и сбросить счетчики на сегодня?')) {
+    if (confirm('Очистить тестовые примеры лекарств, задач и счетчики на сегодня?')) {
       setAppData(prev => ({
         ...prev,
         pills: [],
         pillLogs: [],
-        waterLogs: []
+        waterLogs: [],
+        tasks: []
       }));
+      alert('Тестовые данные успешно очищены!');
     }
+  };
+
+  const handleResetAllData = () => {
+    if (confirm('Вы действительно хотите полностью сбросить все данные приложения до заводских настроек?')) {
+      try {
+        localStorage.removeItem('myplace_app_data_v3');
+        localStorage.removeItem('myplace_show_home_greeting');
+        localStorage.removeItem('myplace_notified_keys_v3');
+      } catch {}
+      setAppData(defaultInitialData);
+      alert('Приложение успешно сброшено до заводских настроек!');
+    }
+  };
+
+  const handleImportAppData = (imported: Partial<AppData>) => {
+    if (!imported || typeof imported !== 'object') {
+      alert('Некорректный файл данных.');
+      return;
+    }
+    setAppData(prev => ({
+      ...defaultInitialData,
+      ...prev,
+      ...imported
+    }));
   };
 
   /* ==========================================
@@ -688,7 +771,7 @@ export function App() {
      ========================================== */
 
   return (
-    <div className="min-h-screen bg-slate-100/60 text-slate-800 flex flex-col justify-between max-w-md mx-auto relative antialiased selection:bg-slate-300">
+    <div className="min-h-screen bg-slate-100/60 text-slate-800 flex flex-col justify-between w-full max-w-md md:max-w-4xl lg:max-w-5xl mx-auto relative antialiased selection:bg-slate-300">
       {/* Top Banner Alert */}
       <NotificationBanner alert={activeAlert} onDismiss={dismissAlert} />
 
@@ -711,7 +794,7 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 px-4 py-4 space-y-4 pb-safe-nav">
+      <main className="flex-1 px-4 md:px-6 py-4 space-y-4 pb-safe-nav">
         {/* TAB 1: HOME WIDGETS DASHBOARD */}
         {currentTab === 'home' && (
           <HomeDashboard
@@ -753,37 +836,40 @@ export function App() {
 
         {/* SUB-SCREEN: FULL CYCLE */}
         {currentTab === 'cycle' && (
-          <div className="space-y-4 animate-fade-in">
-            <CycleHero
-              prediction={prediction}
-              latestPeriod={latestPeriod}
-              theme={cycleTheme}
-              onTogglePeriodToday={handleTogglePeriodToday}
-              onOpenCalendar={() => {
-                setSelectedDate(todayStr);
-                setIsSymptomModalOpen(true);
-              }}
-              onOpenDataImport={() => setIsDataImportOpen(true)}
-            />
+          <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-5 animate-fade-in">
+            <div className="space-y-4">
+              <CycleHero
+                prediction={prediction}
+                latestPeriod={latestPeriod}
+                theme={cycleTheme}
+                onTogglePeriodToday={handleTogglePeriodToday}
+                onOpenCalendar={() => {
+                  setSelectedDate(todayStr);
+                  setIsSymptomModalOpen(true);
+                }}
+              />
 
-            <CycleCalendar
-              periods={appData.periods}
-              settings={appData.cycleSettings}
-              dayLogs={appData.dayLogs}
-              selectedDate={selectedDate}
-              onSelectDate={d => setSelectedDate(d)}
-              onOpenSymptomModal={d => {
-                setSelectedDate(d);
-                setIsSymptomModalOpen(true);
-              }}
-            />
+              <CycleStats
+                prediction={prediction}
+                periods={appData.periods}
+                settings={appData.cycleSettings}
+                dayLogs={appData.dayLogs}
+              />
+            </div>
 
-            <CycleStats
-              prediction={prediction}
-              periods={appData.periods}
-              settings={appData.cycleSettings}
-              dayLogs={appData.dayLogs}
-            />
+            <div>
+              <CycleCalendar
+                periods={appData.periods}
+                settings={appData.cycleSettings}
+                dayLogs={appData.dayLogs}
+                selectedDate={selectedDate}
+                onSelectDate={d => setSelectedDate(d)}
+                onOpenSymptomModal={d => {
+                  setSelectedDate(d);
+                  setIsSymptomModalOpen(true);
+                }}
+              />
+            </div>
           </div>
         )}
 
@@ -806,98 +892,106 @@ export function App() {
 
         {/* SUB-SCREEN: FULL PILLS */}
         {currentTab === 'pills' && (
-          <div className="space-y-4 animate-fade-in pb-12">
-            <PillSummary
-              pills={appData.pills}
-              logs={appData.pillLogs}
-              theme={pillsTheme}
-              onOpenAddModal={() => {
-                setPillToEdit(null);
-                setIsPillModalOpen(true);
-              }}
-            />
+          <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-5 animate-fade-in pb-12">
+            <div className="space-y-4">
+              <PillSummary
+                pills={appData.pills}
+                logs={appData.pillLogs}
+                theme={pillsTheme}
+                onOpenAddModal={() => {
+                  setPillToEdit(null);
+                  setIsPillModalOpen(true);
+                }}
+              />
 
-            <PillsCalendar
-              pills={appData.pills}
-              logs={appData.pillLogs}
-              selectedDate={selectedPillDate}
-              onSelectDate={d => setSelectedPillDate(d)}
-              onLogStatus={handleLogPillStatus}
-              theme={pillsTheme}
-            />
-
-            <div className="space-y-3 pb-6">
-              <div className="flex items-center justify-between px-1">
-                <button
-                  type="button"
-                  onClick={() => setIsPillListExpanded(prev => !prev)}
-                  className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#595959] hover:text-slate-800 transition-colors cursor-pointer py-1.5"
-                >
-                  <span>Все препараты ({appData.pills.filter(p => p.active).length})</span>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      isPillListExpanded ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {isPillListExpanded && (
-                appData.pills.length === 0 ? (
-                  <div className="p-8 rounded-3xl glass-card text-center text-[#595959]">
-                    <PillIcon className="w-10 h-10 mx-auto mb-2" style={{ color: pillsTheme.primary }} />
-                    <p className="text-sm font-bold text-slate-800">Список пуст</p>
-                    <p className="text-xs text-[#595959] mt-0.5">Добавьте витамины или таблетки для напоминаний</p>
-                    <button
-                      onClick={() => {
-                        setPillToEdit(null);
-                        setIsPillModalOpen(true);
-                      }}
-                      style={{ backgroundColor: pillsTheme.primary }}
-                      className="mt-4 px-4 py-2 rounded-2xl text-white text-xs font-bold shadow-md shadow-slate-300 cursor-pointer"
-                    >
-                      + Добавить первый препарат
-                    </button>
-                  </div>
-                ) : (
-                  appData.pills.map(pill => (
-                    <PillCard
-                      key={pill.id}
-                      pill={pill}
-                      logs={appData.pillLogs}
-                      onLogStatus={handleLogPillStatus}
-                      onEdit={p => {
-                        setPillToEdit(p);
-                        setIsPillModalOpen(true);
-                      }}
+              <div className="space-y-3 pb-6">
+                <div className="flex items-center justify-between px-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsPillListExpanded(prev => !prev)}
+                    className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#595959] hover:text-slate-800 transition-colors cursor-pointer py-1.5"
+                  >
+                    <span>Все препараты ({appData.pills.filter(p => p.active).length})</span>
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-200 ${
+                        isPillListExpanded ? 'rotate-180' : ''
+                      }`}
                     />
-                  ))
-                )
-              )}
+                  </button>
+                </div>
+
+                {isPillListExpanded && (
+                  appData.pills.length === 0 ? (
+                    <div className="p-8 rounded-3xl glass-card text-center text-[#595959]">
+                      <PillIcon className="w-10 h-10 mx-auto mb-2" style={{ color: pillsTheme.primary }} />
+                      <p className="text-sm font-bold text-slate-800">Список пуст</p>
+                      <p className="text-xs text-[#595959] mt-0.5">Добавьте витамины или таблетки для напоминаний</p>
+                      <button
+                        onClick={() => {
+                          setPillToEdit(null);
+                          setIsPillModalOpen(true);
+                        }}
+                        style={{ backgroundColor: pillsTheme.primary }}
+                        className="mt-4 px-4 py-2 rounded-2xl text-white text-xs font-bold shadow-md shadow-slate-300 cursor-pointer"
+                      >
+                        + Добавить первый препарат
+                      </button>
+                    </div>
+                  ) : (
+                    appData.pills.map(pill => (
+                      <PillCard
+                        key={pill.id}
+                        pill={pill}
+                        logs={appData.pillLogs}
+                        onLogStatus={handleLogPillStatus}
+                        onEdit={p => {
+                          setPillToEdit(p);
+                          setIsPillModalOpen(true);
+                        }}
+                      />
+                    ))
+                  )
+                )}
+              </div>
+            </div>
+
+            <div>
+              <PillsCalendar
+                pills={appData.pills}
+                logs={appData.pillLogs}
+                selectedDate={selectedPillDate}
+                onSelectDate={d => setSelectedPillDate(d)}
+                onLogStatus={handleLogPillStatus}
+                theme={pillsTheme}
+              />
             </div>
           </div>
         )}
 
         {/* SUB-SCREEN: FULL WATER */}
         {currentTab === 'water' && (
-          <div className="space-y-4 animate-fade-in">
-            <WaterWave
-              currentAmount={currentWaterTotal}
-              goalAmount={appData.waterSettings.dailyGoal}
-              theme={waterTheme}
-              onOpenGoalModal={() => setIsWaterGoalModalOpen(true)}
-            />
+          <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-5 animate-fade-in">
+            <div className="space-y-4">
+              <WaterWave
+                currentAmount={currentWaterTotal}
+                goalAmount={appData.waterSettings.dailyGoal}
+                theme={waterTheme}
+                onOpenGoalModal={() => setIsWaterGoalModalOpen(true)}
+              />
 
-            <WaterQuickAdd onAddWater={handleAddWater} />
+              <WaterQuickAdd onAddWater={handleAddWater} />
+            </div>
 
-            <WaterCalendar
-              logs={appData.waterLogs}
-              dailyGoal={appData.waterSettings.dailyGoal}
-              theme={waterTheme}
-              selectedDate={selectedWaterDate}
-              onSelectDate={d => setSelectedWaterDate(d)}
-              onDeleteLog={handleDeleteWaterLog}
-            />
+            <div>
+              <WaterCalendar
+                logs={appData.waterLogs}
+                dailyGoal={appData.waterSettings.dailyGoal}
+                theme={waterTheme}
+                selectedDate={selectedWaterDate}
+                onSelectDate={d => setSelectedWaterDate(d)}
+                onDeleteLog={handleDeleteWaterLog}
+              />
+            </div>
           </div>
         )}
 
@@ -911,8 +1005,8 @@ export function App() {
               onUpdateNotifications={settings =>
                 setAppData(prev => ({ ...prev, notificationSettings: settings }))
               }
-              onImportData={data => setAppData(data)}
-              onResetData={() => setAppData(defaultInitialData)}
+              onImportData={handleImportAppData}
+              onResetData={handleResetAllData}
               onClearExamplesOnly={handleClearExamplesOnly}
               onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
               onOpenWizard={() => setIsWizardOpen(true)}
@@ -998,13 +1092,6 @@ export function App() {
         isOpen={isWizardOpen}
         onComplete={handleWizardComplete}
         onClose={() => setIsWizardOpen(false)}
-      />
-
-      <DataImportModal
-        isOpen={isDataImportOpen}
-        theme={cycleTheme}
-        onImportPeriods={handleImportPeriods}
-        onClose={() => setIsDataImportOpen(false)}
       />
 
       <ProfileModal

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { CyclePrediction, CyclePeriod, DualColorTheme } from '../../types';
 import confetti from 'canvas-confetti';
-import { Plus, Check, Calendar, Download } from 'lucide-react';
+import { Plus, Check, Calendar } from 'lucide-react';
 
 interface CycleHeroProps {
   prediction: CyclePrediction;
@@ -9,7 +9,6 @@ interface CycleHeroProps {
   theme?: DualColorTheme;
   onTogglePeriodToday: () => void;
   onOpenCalendar: () => void;
-  onOpenDataImport?: () => void;
 }
 
 export const CycleHero: React.FC<CycleHeroProps> = ({
@@ -17,8 +16,7 @@ export const CycleHero: React.FC<CycleHeroProps> = ({
   latestPeriod,
   theme = { primary: '#203A5F', secondary: '#595959' },
   onTogglePeriodToday,
-  onOpenCalendar,
-  onOpenDataImport
+  onOpenCalendar
 }) => {
   const isPeriodActiveToday = latestPeriod && !latestPeriod.endDate && prediction.currentPhase === 'menstruation';
 
@@ -61,22 +59,11 @@ export const CycleHero: React.FC<CycleHeroProps> = ({
         className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full blur-3xl -z-10 pointer-events-none"
       />
 
-      {/* Top Header Row with Compact Import Button */}
+      {/* Top Header Row */}
       <div className="flex items-center justify-between pb-1">
         <span className="text-[11px] font-bold text-[#595959] uppercase tracking-wider">
           Текущее состояние
         </span>
-
-        {onOpenDataImport && (
-          <button
-            onClick={onOpenDataImport}
-            className="px-2.5 py-1 rounded-full bg-slate-100/90 hover:bg-slate-200 text-slate-700 text-[11px] font-bold shadow-2xs border border-slate-200 flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer"
-            title="Импорт прошлых дат цикла из P.C. / Flo"
-          >
-            <Download className="w-3.5 h-3.5" style={{ color: theme.primary }} />
-            <span>Импорт</span>
-          </button>
-        )}
       </div>
 
       {/* Main Cycle Ring Card */}

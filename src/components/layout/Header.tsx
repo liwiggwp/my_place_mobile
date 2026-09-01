@@ -44,8 +44,8 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 pt-safe px-5 pb-3 bg-white/90 backdrop-blur-xl border-b border-slate-200/70 shadow-xs transition-all">
-      <div className="flex items-center justify-between">
+    <header className="sticky top-0 z-30 pt-safe px-4 md:px-6 pb-3 bg-white/90 backdrop-blur-xl border-b border-slate-200/70 shadow-xs transition-all">
+      <div className="w-full max-w-md md:max-w-4xl lg:max-w-5xl mx-auto flex items-center justify-between">
         {isSubScreen ? (
           <div className="flex items-center gap-3">
             <button
