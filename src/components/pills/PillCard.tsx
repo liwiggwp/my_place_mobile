@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Pill, PillLog, PillStatus } from '../../types';
-import { getTodayString } from '../../utils/dateUtils';
-import { Check, Clock, X, Edit3, Pill as PillIcon, Sun, Heart, Leaf } from 'lucide-react';
+import { getTodayString, diffInDays, formatRussianDate } from '../../utils/dateUtils';
+import { Check, Clock, X, Edit3, Pill as PillIcon, Sun, Heart, Leaf, Calendar } from 'lucide-react';
 
 interface PillCardProps {
   pill: Pill;
@@ -12,6 +12,9 @@ interface PillCardProps {
 
 export const PillCard: React.FC<PillCardProps> = ({ pill, logs, onLogStatus, onEdit }) => {
   const todayStr = getTodayString();
+
+  const daysLeft = pill.courseEndDate ? diffInDays(pill.courseEndDate, todayStr) : null;
+  const isCourseEnded = daysLeft !== null && daysLeft < 0;
 
   const getPillIcon = () => {
     switch (pill.category) {
@@ -51,6 +54,20 @@ export const PillCard: React.FC<PillCardProps> = ({ pill, logs, onLogStatus, onE
                 </>
               )}
             </div>
+
+            {/* Course badge */}
+            {pill.isCourse && pill.courseEndDate && (
+              <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/60">
+                <Calendar className="w-3 h-3 text-purple-600 shrink-0" />
+                <span>
+                  {isCourseEnded
+                    ? `Курс завершен (${formatRussianDate(pill.courseEndDate)})`
+                    : daysLeft === 0
+                    ? `Последний день курса сегодня!`
+                    : `Курс до ${formatRussianDate(pill.courseEndDate)} (${daysLeft} дн. осталось)`}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type {
   TabType,
   AppData,
@@ -23,7 +23,7 @@ import { getCyclePrediction, getLatestPeriod } from './utils/cycleCalculations';
 import { addDays, getTodayString } from './utils/dateUtils';
 import { defaultThemeSettings, getScreenTheme } from './utils/themeUtils';
 import confetti from 'canvas-confetti';
-import { Pill as PillIcon } from 'lucide-react';
+import { Pill as PillIcon, ChevronDown } from 'lucide-react';
 
 // Layout Components
 import { Header } from './components/layout/Header';
@@ -50,12 +50,13 @@ import { ManageCategoriesModal } from './components/tasks/ManageCategoriesModal'
 import { PillSummary } from './components/pills/PillSummary';
 import { PillCard } from './components/pills/PillCard';
 import { PillModal } from './components/pills/PillModal';
+import { PillsCalendar } from './components/pills/PillsCalendar';
 
 // Water Components
 import { WaterWave } from './components/water/WaterWave';
 import { WaterQuickAdd } from './components/water/WaterQuickAdd';
-import { WaterLogList } from './components/water/WaterLogList';
 import { WaterGoalModal } from './components/water/WaterGoalModal';
+import { WaterCalendar } from './components/water/WaterCalendar';
 
 // Settings, Profile & Theme Components
 import { SettingsView } from './components/settings/SettingsView';
@@ -156,7 +157,11 @@ const defaultInitialData: AppData = {
       color: '#203A5F',
       notes: 'Во время завтрака',
       active: true,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      isCourse: true,
+      courseStartDate: addDays(getTodayString(), -5),
+      courseDurationDays: 30,
+      courseEndDate: addDays(getTodayString(), 24)
     },
     {
       id: 'pill-2',
@@ -168,7 +173,11 @@ const defaultInitialData: AppData = {
       color: '#595959',
       notes: 'За 30 минут до сна',
       active: true,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      isCourse: true,
+      courseStartDate: addDays(getTodayString(), -2),
+      courseDurationDays: 14,
+      courseEndDate: addDays(getTodayString(), 11)
     }
   ],
   pillLogs: [],
@@ -205,6 +214,8 @@ export function App() {
   const [appData, setAppData] = useLocalStorage<AppData>('myplace_app_data_v3', defaultInitialData);
   const [currentTab, setCurrentTab] = useState<TabType>('home');
   const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
+  const [selectedWaterDate, setSelectedWaterDate] = useState<string>(getTodayString());
+  const [selectedPillDate, setSelectedPillDate] = useState<string>(getTodayString());
 
   // Modals state
   const [isSymptomModalOpen, setIsSymptomModalOpen] = useState(false);
@@ -222,6 +233,7 @@ export function App() {
   const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<TaskItem | null>(null);
   const [taskModalDefaultDate, setTaskModalDefaultDate] = useState<string>(getTodayString());
+  const [isPillListExpanded, setIsPillListExpanded] = useState(true);
 
   // Sound and Haptic
   const { playWaterDrop, playPillChime, playCelebration, playSoftClick, triggerVibrate } = useSoundEffects(
@@ -243,6 +255,39 @@ export function App() {
   );
 
   const todayStr = getTodayString();
+
+  useEffect(() => {
+    // Migration helper: ensure initial default pills have course dates if missing
+    setAppData(prev => {
+      let changed = false;
+      const updatedPills = (prev.pills || []).map(p => {
+        if (!p.isCourse && !p.courseEndDate) {
+          if (p.id === 'pill-1' || p.name.includes('Витамин D')) {
+            changed = true;
+            return {
+              ...p,
+              isCourse: true,
+              courseStartDate: p.courseStartDate || addDays(todayStr, -5),
+              courseDurationDays: p.courseDurationDays || 30,
+              courseEndDate: p.courseEndDate || addDays(todayStr, 24)
+            };
+          }
+          if (p.id === 'pill-2' || p.name.includes('Магний')) {
+            changed = true;
+            return {
+              ...p,
+              isCourse: true,
+              courseStartDate: p.courseStartDate || addDays(todayStr, -2),
+              courseDurationDays: p.courseDurationDays || 14,
+              courseEndDate: p.courseEndDate || addDays(todayStr, 11)
+            };
+          }
+        }
+        return p;
+      });
+      return changed ? { ...prev, pills: updatedPills } : prev;
+    });
+  }, [todayStr, setAppData]);
   const prediction = getCyclePrediction(appData.periods, appData.cycleSettings, selectedDate);
   const latestPeriod = getLatestPeriod(appData.periods);
 
@@ -759,7 +804,7 @@ export function App() {
 
         {/* SUB-SCREEN: FULL PILLS */}
         {currentTab === 'pills' && (
-          <div className="space-y-4 animate-fade-in">
+          <div className="space-y-4 animate-fade-in pb-12">
             <PillSummary
               pills={appData.pills}
               logs={appData.pillLogs}
@@ -770,42 +815,62 @@ export function App() {
               }}
             />
 
-            <div className="space-y-3">
+            <PillsCalendar
+              pills={appData.pills}
+              logs={appData.pillLogs}
+              selectedDate={selectedPillDate}
+              onSelectDate={d => setSelectedPillDate(d)}
+              onLogStatus={handleLogPillStatus}
+              theme={pillsTheme}
+            />
+
+            <div className="space-y-3 pb-6">
               <div className="flex items-center justify-between px-1">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#595959]">
-                  Список лекарств и витаминов ({appData.pills.filter(p => p.active).length})
-                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsPillListExpanded(prev => !prev)}
+                  className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#595959] hover:text-slate-800 transition-colors cursor-pointer py-1.5"
+                >
+                  <span>Все препараты ({appData.pills.filter(p => p.active).length})</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      isPillListExpanded ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
               </div>
 
-              {appData.pills.length === 0 ? (
-                <div className="p-8 rounded-3xl glass-card text-center text-[#595959]">
-                  <PillIcon className="w-10 h-10 mx-auto mb-2" style={{ color: pillsTheme.primary }} />
-                  <p className="text-sm font-bold text-slate-800">Список пуст</p>
-                  <p className="text-xs text-[#595959] mt-0.5">Добавьте витамины или таблетки для напоминаний</p>
-                  <button
-                    onClick={() => {
-                      setPillToEdit(null);
-                      setIsPillModalOpen(true);
-                    }}
-                    style={{ backgroundColor: pillsTheme.primary }}
-                    className="mt-4 px-4 py-2 rounded-2xl text-white text-xs font-bold shadow-md shadow-slate-300 cursor-pointer"
-                  >
-                    + Добавить первый препарат
-                  </button>
-                </div>
-              ) : (
-                appData.pills.map(pill => (
-                  <PillCard
-                    key={pill.id}
-                    pill={pill}
-                    logs={appData.pillLogs}
-                    onLogStatus={handleLogPillStatus}
-                    onEdit={p => {
-                      setPillToEdit(p);
-                      setIsPillModalOpen(true);
-                    }}
-                  />
-                ))
+              {isPillListExpanded && (
+                appData.pills.length === 0 ? (
+                  <div className="p-8 rounded-3xl glass-card text-center text-[#595959]">
+                    <PillIcon className="w-10 h-10 mx-auto mb-2" style={{ color: pillsTheme.primary }} />
+                    <p className="text-sm font-bold text-slate-800">Список пуст</p>
+                    <p className="text-xs text-[#595959] mt-0.5">Добавьте витамины или таблетки для напоминаний</p>
+                    <button
+                      onClick={() => {
+                        setPillToEdit(null);
+                        setIsPillModalOpen(true);
+                      }}
+                      style={{ backgroundColor: pillsTheme.primary }}
+                      className="mt-4 px-4 py-2 rounded-2xl text-white text-xs font-bold shadow-md shadow-slate-300 cursor-pointer"
+                    >
+                      + Добавить первый препарат
+                    </button>
+                  </div>
+                ) : (
+                  appData.pills.map(pill => (
+                    <PillCard
+                      key={pill.id}
+                      pill={pill}
+                      logs={appData.pillLogs}
+                      onLogStatus={handleLogPillStatus}
+                      onEdit={p => {
+                        setPillToEdit(p);
+                        setIsPillModalOpen(true);
+                      }}
+                    />
+                  ))
+                )
               )}
             </div>
           </div>
@@ -823,7 +888,14 @@ export function App() {
 
             <WaterQuickAdd onAddWater={handleAddWater} />
 
-            <WaterLogList logs={todayWaterLogs} onDeleteLog={handleDeleteWaterLog} />
+            <WaterCalendar
+              logs={appData.waterLogs}
+              dailyGoal={appData.waterSettings.dailyGoal}
+              theme={waterTheme}
+              selectedDate={selectedWaterDate}
+              onSelectDate={d => setSelectedWaterDate(d)}
+              onDeleteLog={handleDeleteWaterLog}
+            />
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Pill, PillCategory, PillScheduleType } from '../../types';
-import { X, Plus, Trash2, Check, Clock, Pill as PillIcon, Sun, Heart, Leaf } from 'lucide-react';
+import { getTodayString, addDays, diffInDays, formatFullRussianDate } from '../../utils/dateUtils';
+import { X, Plus, Trash2, Check, Clock, Pill as PillIcon, Sun, Heart, Leaf, Calendar } from 'lucide-react';
 
 interface PillModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export const PillModal: React.FC<PillModalProps> = ({
   onDelete,
   onClose
 }) => {
+  const todayStr = getTodayString();
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('1 табл.');
   const [category, setCategory] = useState<PillCategory>('pill');
@@ -24,6 +26,12 @@ export const PillModal: React.FC<PillModalProps> = ({
   const [scheduleType, setScheduleType] = useState<PillScheduleType>('everyday');
   const [color, setColor] = useState('#8b5cf6');
   const [notes, setNotes] = useState('');
+
+  // Course duration fields
+  const [isCourse, setIsCourse] = useState(false);
+  const [courseStartDate, setCourseStartDate] = useState(todayStr);
+  const [courseDurationDays, setCourseDurationDays] = useState(14);
+  const [courseEndDate, setCourseEndDate] = useState('');
 
   useEffect(() => {
     if (pillToEdit) {
@@ -34,6 +42,11 @@ export const PillModal: React.FC<PillModalProps> = ({
       setScheduleType(pillToEdit.scheduleType || 'everyday');
       setColor(pillToEdit.color || '#8b5cf6');
       setNotes(pillToEdit.notes || '');
+
+      setIsCourse(pillToEdit.isCourse ?? Boolean(pillToEdit.courseEndDate));
+      setCourseStartDate(pillToEdit.courseStartDate || todayStr);
+      setCourseDurationDays(pillToEdit.courseDurationDays || 14);
+      setCourseEndDate(pillToEdit.courseEndDate || (pillToEdit.courseDurationDays ? addDays(pillToEdit.courseStartDate || todayStr, (pillToEdit.courseDurationDays || 14) - 1) : addDays(todayStr, 13)));
     } else {
       setName('');
       setDosage('1 табл.');
@@ -42,8 +55,13 @@ export const PillModal: React.FC<PillModalProps> = ({
       setScheduleType('everyday');
       setColor('#8b5cf6');
       setNotes('');
+
+      setIsCourse(false);
+      setCourseStartDate(todayStr);
+      setCourseDurationDays(14);
+      setCourseEndDate(addDays(todayStr, 13));
     }
-  }, [pillToEdit, isOpen]);
+  }, [pillToEdit, isOpen, todayStr]);
 
   if (!isOpen) return null;
 
@@ -88,6 +106,8 @@ export const PillModal: React.FC<PillModalProps> = ({
     e.preventDefault();
     if (!name.trim()) return;
 
+    const finalEndDate = isCourse ? (courseEndDate || addDays(courseStartDate, courseDurationDays - 1)) : undefined;
+
     onSave({
       ...(pillToEdit ? { id: pillToEdit.id } : {}),
       name: name.trim(),
@@ -97,7 +117,11 @@ export const PillModal: React.FC<PillModalProps> = ({
       scheduleType,
       color,
       notes: notes.trim(),
-      active: true
+      active: true,
+      isCourse,
+      courseStartDate: isCourse ? courseStartDate : undefined,
+      courseDurationDays: isCourse ? courseDurationDays : undefined,
+      courseEndDate: finalEndDate
     });
     onClose();
   };
@@ -162,6 +186,98 @@ export const PillModal: React.FC<PillModalProps> = ({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Course duration section */}
+          <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-purple-600" />
+                <div>
+                  <h4 className="text-xs font-bold text-slate-800">Курсовой приём</h4>
+                  <p className="text-[10px] text-slate-500">Задать длительность и дату окончания</p>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={isCourse}
+                onChange={e => setIsCourse(e.target.checked)}
+                className="w-5 h-5 rounded-md accent-purple-600 cursor-pointer"
+              />
+            </div>
+
+            {isCourse && (
+              <div className="space-y-3 pt-2 border-t border-purple-100">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      Старт курса
+                    </label>
+                    <input
+                      type="date"
+                      value={courseStartDate}
+                      onChange={e => {
+                        const newStart = e.target.value;
+                        setCourseStartDate(newStart);
+                        setCourseEndDate(addDays(newStart, courseDurationDays - 1));
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      Окончание (до какого)
+                    </label>
+                    <input
+                      type="date"
+                      value={courseEndDate}
+                      onChange={e => {
+                        const newEnd = e.target.value;
+                        setCourseEndDate(newEnd);
+                        const diff = diffInDays(newEnd, courseStartDate) + 1;
+                        if (diff > 0) setCourseDurationDays(diff);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Quick duration presets */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                    Быстрый выбор длительности:
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[7, 10, 14, 21, 30, 60, 90].map(days => (
+                      <button
+                        key={days}
+                        type="button"
+                        onClick={() => {
+                          setCourseDurationDays(days);
+                          setCourseEndDate(addDays(courseStartDate, days - 1));
+                        }}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          courseDurationDays === days
+                            ? 'bg-purple-600 text-white shadow-xs'
+                            : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {days < 30 ? `${days} дн.` : days === 30 ? '1 мес.' : days === 60 ? '2 мес.' : '3 мес.'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {courseEndDate && (
+                  <div className="p-2.5 rounded-xl bg-white text-xs font-medium text-purple-900 border border-purple-100 flex items-center justify-between">
+                    <span>Пить до: <strong className="font-bold">{formatFullRussianDate(courseEndDate)}</strong></span>
+                    <span className="text-[10px] font-bold bg-purple-100 px-2 py-0.5 rounded-full text-purple-700">
+                      {courseDurationDays} дн.
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Dosage & Notes */}

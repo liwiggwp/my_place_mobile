@@ -227,6 +227,10 @@ export interface Pill {
   notes?: string;
   active: boolean;
   createdAt: string;
+  isCourse?: boolean;
+  courseStartDate?: string;    // YYYY-MM-DD
+  courseDurationDays?: number; // e.g. 7, 10, 14, 21, 30, 60, 90
+  courseEndDate?: string;      // YYYY-MM-DD
 }
 
 export type PillStatus = 'taken' | 'skipped' | 'snoozed';
