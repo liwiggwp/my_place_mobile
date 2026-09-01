@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { AppThemeSettings, DualColorTheme } from '../../types';
 import { defaultThemeSettings, THEME_PRESETS } from '../../utils/themeUtils';
-import { X, Check, RotateCcw, Palette, Sparkles } from 'lucide-react';
+import { X, Check, RotateCcw, Palette, Sparkles, Globe, Heart, CheckSquare, Droplets, Pill as PillIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { MyPlaceLogo } from '../common/MyPlaceLogo';
 
@@ -12,7 +12,7 @@ interface ThemeCustomizerModalProps {
   onClose: () => void;
 }
 
-type ScreenTarget = 'global' | 'cycle' | 'water' | 'pills';
+type ScreenTarget = 'global' | 'cycle' | 'tasks' | 'water' | 'pills';
 
 const QUICK_COLORS = [
   '#203A5F', '#595959', '#1E3A8A', '#0284C7',
@@ -122,11 +122,12 @@ export const ThemeCustomizerModal: React.FC<ThemeCustomizerModalProps> = ({
     onClose();
   };
 
-  const targets: { id: ScreenTarget; label: string; icon: string }[] = [
-    { id: 'global', label: 'Всё', icon: '🌐' },
-    { id: 'cycle', label: 'Цикл', icon: '🌸' },
-    { id: 'water', label: 'Вода', icon: '💧' },
-    { id: 'pills', label: 'Таблетки', icon: '💊' }
+  const targets: { id: ScreenTarget; label: string; icon: React.ReactNode }[] = [
+    { id: 'global', label: 'Всё', icon: <Globe className="w-4 h-4" /> },
+    { id: 'cycle', label: 'Цикл', icon: <Heart className="w-4 h-4" /> },
+    { id: 'tasks', label: 'Задачи', icon: <CheckSquare className="w-4 h-4" /> },
+    { id: 'water', label: 'Вода', icon: <Droplets className="w-4 h-4" /> },
+    { id: 'pills', label: 'Таблетки', icon: <PillIcon className="w-4 h-4" /> }
   ];
 
   return (
@@ -154,7 +155,7 @@ export const ThemeCustomizerModal: React.FC<ThemeCustomizerModalProps> = ({
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto no-scrollbar px-1 py-3.5 space-y-4">
           {/* Target Tabs */}
-          <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 rounded-2xl">
+          <div className="grid grid-cols-5 gap-1 p-1 bg-slate-100 rounded-2xl">
             {targets.map(t => {
               const isSelected = activeTarget === t.id;
               const hasOverride = t.id !== 'global' && !!localSettings[t.id];
@@ -205,37 +206,69 @@ export const ThemeCustomizerModal: React.FC<ThemeCustomizerModalProps> = ({
             </div>
           )}
 
-          {/* Live Preview Card */}
-          <div
-            style={{
-              background: `linear-gradient(135deg, ${currentTheme.primary} 0%, ${currentTheme.secondary} 100%)`
-            }}
-            className="p-5 rounded-3xl text-white shadow-lg shadow-slate-300 transition-all space-y-2 relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between relative z-10">
-              <div className="flex items-center gap-2">
-                <MyPlaceLogo className="w-6 h-6" primaryColor="#ffffff" secondaryColor="#e2e8f0" />
-                <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-md">
-                  {isGlobal ? 'Тема всего приложения' : `Экран «${targets.find(t => t.id === activeTarget)?.label}»`}
-                </span>
+          {/* Live Preview Card (Target Specific) */}
+          {(() => {
+            const previewConfig = {
+              global: {
+                title: 'MyPlace • Главный экран',
+                subtitle: 'Общая палитра приложения и виджетов',
+                badge: 'Все виджеты и навигация'
+              },
+              cycle: {
+                title: '14 день цикла • Овуляция',
+                subtitle: 'Фаза цикла и прогноз фертильности',
+                badge: 'Высокая вероятность зачатия'
+              },
+              tasks: {
+                title: '3 из 4 задач выполнено (75%)',
+                subtitle: 'Планирование на день, неделю и месяц',
+                badge: '09:00 Разминка • Высокий приоритет'
+              },
+              water: {
+                title: '1 500 / 2 000 мл (75%)',
+                subtitle: 'Трекер водного баланса и напоминания',
+                badge: 'Выпито 6 из 8 стаканов воды'
+              },
+              pills: {
+                title: 'Витамин D3 • 2000 ME',
+                subtitle: 'Расписание и напоминания о приеме',
+                badge: 'Принято сегодня в 09:00'
+              }
+            }[activeTarget];
+
+            return (
+              <div
+                style={{
+                  background: `linear-gradient(135deg, ${currentTheme.primary} 0%, ${currentTheme.secondary} 100%)`
+                }}
+                className="p-5 rounded-3xl text-white shadow-lg shadow-slate-300 transition-all space-y-2 relative overflow-hidden"
+              >
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-2">
+                    <MyPlaceLogo className="w-6 h-6" primaryColor="#ffffff" secondaryColor="#e2e8f0" />
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-md">
+                      {isGlobal ? 'Тема всего приложения' : `Экран «${targets.find(t => t.id === activeTarget)?.label}»`}
+                    </span>
+                  </div>
+                  <Sparkles className="w-4 h-4 text-white/80" />
+                </div>
+
+                <div className="pt-2 relative z-10">
+                  <h4 className="text-xl font-black">{previewConfig.title}</h4>
+                  <p className="text-xs text-white/80 mt-0.5">{previewConfig.subtitle}</p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 text-[10px] font-bold text-white/90 relative z-10">
+                  <span className="px-2.5 py-1 rounded-xl bg-white/25 backdrop-blur-md border border-white/20">
+                    {previewConfig.badge}
+                  </span>
+                  <span className="px-2.5 py-1 rounded-xl bg-white/15 backdrop-blur-md border border-white/15">
+                    {currentTheme.primary} • {currentTheme.secondary}
+                  </span>
+                </div>
               </div>
-              <Sparkles className="w-4 h-4 text-white/80" />
-            </div>
-
-            <div className="pt-2 relative z-10">
-              <h4 className="text-xl font-black">28 день цикла</h4>
-              <p className="text-xs text-white/80 mt-0.5">Пример карточки и виджетов с выбранными цветами</p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5 pt-2 text-[10px] font-bold text-white/90 relative z-10">
-              <span className="px-2.5 py-1 rounded-xl bg-white/20 backdrop-blur-md border border-white/20">
-                Цвет 1: {currentTheme.primary}
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-white/20 backdrop-blur-md border border-white/20">
-                Цвет 2: {currentTheme.secondary}
-              </span>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Dual Color Selectors */}
           <div className="grid grid-cols-2 gap-3">

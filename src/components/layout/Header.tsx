@@ -2,6 +2,7 @@ import React from 'react';
 import type { DualColorTheme } from '../../types';
 import { ArrowLeft } from 'lucide-react';
 import { MyPlaceLogo } from '../common/MyPlaceLogo';
+import { UserAvatar } from '../common/UserAvatar';
 
 interface HeaderProps {
   currentTab: string;
@@ -14,12 +15,12 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentTab,
-  avatarEmoji = '🌸',
+  avatarEmoji = 'user',
   theme = { primary: '#203A5F', secondary: '#595959' },
   onOpenProfile,
   onBackToHome
 }) => {
-  const isSubScreen = currentTab === 'cycle' || currentTab === 'pills' || currentTab === 'water';
+  const isSubScreen = currentTab === 'cycle' || currentTab === 'pills' || currentTab === 'water' || currentTab === 'tasks';
 
   const getTabTitle = () => {
     switch (currentTab) {
@@ -27,6 +28,8 @@ export const Header: React.FC<HeaderProps> = ({
         return 'MyPlace';
       case 'cycle':
         return 'Мой Цикл';
+      case 'tasks':
+        return 'Задачи';
       case 'pills':
         return 'Таблетки и витамины';
       case 'water':
@@ -77,9 +80,9 @@ export const Header: React.FC<HeaderProps> = ({
             style={{
               background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`
             }}
-            className="w-10 h-10 rounded-2xl shadow-md shadow-slate-300 flex items-center justify-center text-white text-xl active:scale-90 transition-transform relative group border border-white/80 cursor-pointer"
+            className="w-10 h-10 rounded-2xl shadow-md shadow-slate-300 flex items-center justify-center text-white active:scale-90 transition-transform relative group border border-white/80 cursor-pointer"
           >
-            <span>{avatarEmoji}</span>
+            <UserAvatar avatarId={avatarEmoji} className="w-5 h-5 text-white" />
             <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
           </button>
         </div>

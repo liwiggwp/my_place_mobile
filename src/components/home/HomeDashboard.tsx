@@ -14,7 +14,11 @@ import {
   Minus,
   Maximize2,
   Camera,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Sparkles,
+  Leaf,
+  Moon,
+  Lightbulb
 } from 'lucide-react';
 import { AddWidgetModal } from './AddWidgetModal';
 import { MyPlaceLogo } from '../common/MyPlaceLogo';
@@ -22,7 +26,7 @@ import { MyPlaceLogo } from '../common/MyPlaceLogo';
 interface HomeDashboardProps {
   appData: AppData;
   prediction: CyclePrediction;
-  onNavigate: (tab: 'cycle' | 'pills' | 'water' | 'settings') => void;
+  onNavigate: (tab: 'cycle' | 'pills' | 'water' | 'tasks' | 'settings') => void;
   onQuickAddWater: (amount: number) => void;
   onLogPillTaken?: (pillId: string, scheduledTime: string) => void;
   onOpenProfile: () => void;
@@ -30,10 +34,11 @@ interface HomeDashboardProps {
 }
 
 export const defaultWidgetsConfig: WidgetConfig[] = [
-  { id: 'cycle', type: 'cycle', title: '🌸 Мой Цикл', enabled: true, size: 'large', order: 0, row: 0, col: 0 },
-  { id: 'water', type: 'water', title: '💧 Водный Баланс', enabled: true, size: 'medium', order: 1, row: 1, col: 0 },
-  { id: 'pills', type: 'pills', title: '💊 Лекарства и Витамины', enabled: true, size: 'medium', order: 2, row: 2, col: 0 },
-  { id: 'tip', type: 'tip', title: '💡 Совет Дня', enabled: true, size: 'small', order: 3, row: 3, col: 0 }
+  { id: 'cycle', type: 'cycle', title: 'Мой Цикл', enabled: true, size: 'large', order: 0, row: 0, col: 0 },
+  { id: 'tasks', type: 'tasks', title: 'Задачи и Планы', enabled: true, size: 'medium', order: 1, row: 1, col: 0 },
+  { id: 'water', type: 'water', title: 'Водный Баланс', enabled: true, size: 'medium', order: 2, row: 2, col: 0 },
+  { id: 'pills', type: 'pills', title: 'Лекарства и Витамины', enabled: true, size: 'medium', order: 3, row: 3, col: 0 },
+  { id: 'tip', type: 'tip', title: 'Совет Дня', enabled: true, size: 'small', order: 4, row: 4, col: 0 }
 ];
 
 interface DragSession {
@@ -72,6 +77,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   // Themes
   const globalTheme = getScreenTheme(appData.themeSettings, 'global');
   const cycleTheme = getScreenTheme(appData.themeSettings, 'cycle');
+  const tasksTheme = getScreenTheme(appData.themeSettings, 'tasks');
   const waterTheme = getScreenTheme(appData.themeSettings, 'water');
   const pillsTheme = getScreenTheme(appData.themeSettings, 'pills');
 
@@ -426,10 +432,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
   const getPhaseIcon = () => {
     switch (prediction.currentPhase) {
-      case 'menstruation': return '🩸';
-      case 'ovulation': return '✨';
-      case 'follicular': return '🌿';
-      default: return '🌙';
+      case 'menstruation': return <Droplets className="w-4 h-4 text-rose-200 shrink-0" />;
+      case 'ovulation': return <Sparkles className="w-4 h-4 text-amber-200 shrink-0" />;
+      case 'follicular': return <Leaf className="w-4 h-4 text-emerald-200 shrink-0" />;
+      default: return <Moon className="w-4 h-4 text-indigo-200 shrink-0" />;
     }
   };
 
@@ -1051,7 +1057,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         >
           {renderEditControls(widget)}
           <div className="flex items-center justify-between pointer-events-none">
-            <span className="text-2xl shrink-0">💡</span>
+            <Lightbulb className="w-5 h-5 text-amber-500 shrink-0" />
             <span
               style={{ color: globalTheme.primary, backgroundColor: `${globalTheme.primary}15` }}
               className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
@@ -1084,9 +1090,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           {renderEditControls(widget)}
           <div
             style={{ backgroundColor: `${globalTheme.primary}15`, color: globalTheme.primary }}
-            className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 text-lg pointer-events-none"
+            className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 pointer-events-none"
           >
-            💡
+            <Lightbulb className="w-5 h-5 text-amber-500" />
           </div>
           <div className="pointer-events-none min-w-0">
             <h4 className="text-xs font-bold text-slate-800">Совет дня для фазы «{prediction.phaseName}»</h4>
@@ -1110,7 +1116,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       >
         {renderEditControls(widget)}
         <div className="flex items-center gap-2 pointer-events-none">
-          <span className="text-2xl shrink-0">💡</span>
+          <Lightbulb className="w-5 h-5 text-amber-500 shrink-0" />
           <div>
             <h4 className="text-sm font-bold text-slate-800">Гид по вашей текущей фазе ({prediction.phaseName})</h4>
             <p className="text-[11px] text-[#595959]">Рекомендации по телу и питанию</p>
@@ -1118,15 +1124,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
         <div className="grid grid-cols-3 gap-2 text-xs pt-1 pointer-events-none">
           <div className="p-2.5 rounded-2xl bg-slate-50 text-slate-700 border border-slate-100">
-            <span className="font-bold block mb-0.5 truncate" style={{ color: globalTheme.primary }}>🥗 Питание</span>
+            <span className="font-bold block mb-0.5 truncate" style={{ color: globalTheme.primary }}>Питание</span>
             <span className="text-[10px] text-[#595959] leading-tight">Свежие продукты</span>
           </div>
           <div className="p-2.5 rounded-2xl bg-slate-50 text-slate-700 border border-slate-100">
-            <span className="font-bold block mb-0.5 truncate" style={{ color: globalTheme.primary }}>🏃‍♀️ Спорт</span>
+            <span className="font-bold block mb-0.5 truncate" style={{ color: globalTheme.primary }}>Спорт</span>
             <span className="text-[10px] text-[#595959] leading-tight">По ощущениям</span>
           </div>
           <div className="p-2.5 rounded-2xl bg-slate-50 text-slate-700 border border-slate-100">
-            <span className="font-bold block mb-0.5 truncate" style={{ color: globalTheme.primary }}>🌙 Сон</span>
+            <span className="font-bold block mb-0.5 truncate" style={{ color: globalTheme.primary }}>Сон</span>
             <span className="text-[10px] text-[#595959] leading-tight">8+ часов отдыха</span>
           </div>
         </div>
@@ -1166,7 +1172,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           {renderEditControls(widget)}
           {isEditing && (
             <span className="text-xs font-bold pointer-events-none" style={{ color: globalTheme.primary }}>
-              🔲 Пустой отступ
+              Пустой отступ
             </span>
           )}
         </div>
@@ -1261,9 +1267,174 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     );
   };
 
+  // TASKS WIDGET
+  const renderTasksWidget = (widget: WidgetConfig, idx: number) => {
+    const size = widget.size;
+    const jiggleClass = isEditing ? (idx % 2 === 0 ? 'animate-jiggle' : 'animate-jiggle-alt') : '';
+    const isThisDragged = dragSession?.widgetId === widget.id && dragSession.hasMoved;
+
+    const todayTasksList = (appData.tasks || []).filter(t => t.date === todayStr);
+    const activeTasks = todayTasksList.filter(t => !t.completed);
+    const completedTasksCount = todayTasksList.filter(t => t.completed).length;
+    const progressPercent = todayTasksList.length > 0 ? Math.round((completedTasksCount / todayTasksList.length) * 100) : 0;
+
+    const cardGradientStyle: React.CSSProperties = isThisDragged
+      ? {
+          background: `linear-gradient(135deg, ${tasksTheme.primary} 0%, ${tasksTheme.secondary} 100%)`,
+          transform: `translate3d(${dragSession.currentX - dragSession.startX}px, ${dragSession.currentY - dragSession.startY}px, 0) scale(1.05)`,
+          zIndex: 50,
+          boxShadow: `0 25px 50px -12px ${tasksTheme.primary}60`,
+          opacity: 0.95,
+          pointerEvents: 'none'
+        }
+      : {
+          background: `linear-gradient(135deg, ${tasksTheme.primary} 0%, ${tasksTheme.secondary} 100%)`
+        };
+
+    if (size === 'small') {
+      return (
+        <div
+          key={widget.id}
+          data-widget-id={widget.id}
+          onPointerDown={e => handleCardPointerDown(e, widget.id)}
+          onPointerUp={handleCardPointerUp}
+          onClick={() => !isEditing && onNavigate('tasks')}
+          style={cardGradientStyle}
+          className={`relative p-3.5 sm:p-4 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow flex flex-col justify-between min-h-[160px] h-full select-none overflow-hidden ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          } ${jiggleClass}`}
+        >
+          {renderEditControls(widget)}
+          <div className="flex items-center justify-between pointer-events-none">
+            <span className="text-xl">📝</span>
+            <span className="text-[10px] font-black bg-white/20 px-2 py-0.5 rounded-full">{progressPercent}%</span>
+          </div>
+
+          <div className="my-1 pointer-events-none">
+            <h3 className="text-2xl font-black tracking-tight">{activeTasks.length}</h3>
+            <p className="text-[11px] text-white/80 font-medium">
+              {activeTasks.length === 1 ? 'активная задача' : activeTasks.length < 5 ? 'активные задачи' : 'активных задач'}
+            </p>
+          </div>
+
+          <div className="pt-2 border-t border-white/20 flex items-center justify-between pointer-events-none">
+            <span className="text-[10px] font-bold text-white/90">План на день</span>
+            <ChevronRight className="w-3.5 h-3.5 text-white/80" />
+          </div>
+        </div>
+      );
+    }
+
+    if (size === 'medium') {
+      return (
+        <div
+          key={widget.id}
+          data-widget-id={widget.id}
+          onPointerDown={e => handleCardPointerDown(e, widget.id)}
+          onPointerUp={handleCardPointerUp}
+          onClick={() => !isEditing && onNavigate('tasks')}
+          style={cardGradientStyle}
+          className={`relative p-4 sm:p-5 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow select-none overflow-hidden ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          } ${jiggleClass}`}
+        >
+          {renderEditControls(widget)}
+          <div className="flex items-start justify-between pointer-events-none">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-lg border border-white/20">
+                📝
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider block">Задачи на сегодня</span>
+                <div className="text-sm font-black">
+                  {todayTasksList.length === 0 ? 'Нет задач' : `Выполнено ${completedTasksCount} из ${todayTasksList.length}`}
+                </div>
+              </div>
+            </div>
+            <span className="text-xs font-black bg-white/20 px-2.5 py-1 rounded-full border border-white/20">
+              {progressPercent}%
+            </span>
+          </div>
+
+          {/* Top 2 Active Tasks preview */}
+          <div className="mt-2.5 space-y-1.5 pointer-events-none">
+            {todayTasksList.length > 0 ? (
+              todayTasksList.slice(0, 2).map(t => (
+                <div key={t.id} className="flex items-center gap-2 text-xs bg-white/10 rounded-xl px-2.5 py-1.5 backdrop-blur-xs">
+                  <div className={`w-3.5 h-3.5 rounded-md border flex items-center justify-center ${t.completed ? 'bg-white text-slate-900 border-white' : 'border-white/60'}`}>
+                    {t.completed && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                  </div>
+                  <span className={`truncate ${t.completed ? 'line-through opacity-70' : 'font-semibold'}`}>{t.title}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-white/80 py-1">Все задачи выполнены или еще не запланированы</p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Large
+    return (
+      <div
+        key={widget.id}
+        data-widget-id={widget.id}
+        onPointerDown={e => handleCardPointerDown(e, widget.id)}
+        onPointerUp={handleCardPointerUp}
+        onClick={() => !isEditing && onNavigate('tasks')}
+        style={cardGradientStyle}
+        className={`relative p-5 sm:p-6 rounded-3xl text-white shadow-xl cursor-pointer active:scale-[0.98] transition-shadow select-none overflow-hidden space-y-3 ${
+          isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+        } ${jiggleClass}`}
+      >
+        {renderEditControls(widget)}
+        <div className="flex items-start justify-between pointer-events-none">
+          <div>
+            <span className="text-xs font-bold text-white/80 uppercase tracking-wider block">План и задачи на день</span>
+            <h3 className="text-2xl font-black mt-0.5">
+              {todayTasksList.length === 0 ? 'Свободный день' : `Выполнено ${completedTasksCount} из ${todayTasksList.length}`}
+            </h3>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-base font-black">
+            {progressPercent}%
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden pointer-events-none">
+          <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+        </div>
+
+        {/* Task list preview */}
+        <div className="space-y-1.5 pointer-events-none">
+          {todayTasksList.length > 0 ? (
+            todayTasksList.slice(0, 3).map(t => (
+              <div key={t.id} className="flex items-center gap-2 text-xs bg-white/10 rounded-xl px-3 py-2 backdrop-blur-xs">
+                <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${t.completed ? 'bg-white text-slate-900 border-white' : 'border-white/60'}`}>
+                  {t.completed && <Check className="w-3 h-3 stroke-[3]" />}
+                </div>
+                <span className={`truncate flex-1 ${t.completed ? 'line-through opacity-70' : 'font-semibold'}`}>{t.title}</span>
+                {t.time && <span className="text-[10px] text-white/80 shrink-0">{t.time}</span>}
+              </div>
+            ))
+          ) : (
+            <p className="text-xs text-white/80 py-1">Нажмите, чтобы открыть планировщик задач</p>
+          )}
+        </div>
+
+        <div className="pt-2 border-t border-white/20 flex items-center justify-between pointer-events-none">
+          <span className="text-xs font-bold text-white/90">Открыть календарь задач →</span>
+          <ChevronRight className="w-4 h-4 text-white/80" />
+        </div>
+      </div>
+    );
+  };
+
   const renderWidgetByConfig = (widget: WidgetConfig, idx: number) => {
     switch (widget.type) {
       case 'cycle': return renderCycleWidget(widget, idx);
+      case 'tasks': return renderTasksWidget(widget, idx);
       case 'water': return renderWaterWidget(widget, idx);
       case 'pills': return renderPillsWidget(widget, idx);
       case 'tip': return renderTipWidget(widget, idx);

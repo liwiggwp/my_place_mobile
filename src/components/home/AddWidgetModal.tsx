@@ -1,6 +1,18 @@
 import React, { useState } from 'react';
 import type { WidgetConfig, WidgetSize, WidgetType } from '../../types';
-import { X, Plus, Sparkles, Image } from 'lucide-react';
+import {
+  X,
+  Plus,
+  Sparkles,
+  Image as ImageIcon,
+  Heart,
+  CheckSquare,
+  Droplets,
+  Pill as PillIcon,
+  Lightbulb,
+  Minus,
+  Square
+} from 'lucide-react';
 
 interface AddWidgetModalProps {
   isOpen: boolean;
@@ -13,7 +25,7 @@ interface WidgetTemplate {
   type: WidgetType;
   title: string;
   subtitle: string;
-  emoji: string;
+  icon: React.ReactNode;
   defaultSize: WidgetSize;
   description: string;
 }
@@ -23,7 +35,7 @@ const AVAILABLE_TEMPLATES: WidgetTemplate[] = [
     type: 'photo',
     title: 'Моё фото / Картинка',
     subtitle: 'Любое фото с телефона или ПК',
-    emoji: '🖼️',
+    icon: <ImageIcon className="w-5 h-5 text-indigo-600" />,
     defaultSize: 'small',
     description: 'Вставьте любимое фото, картинку или эстетичный постер в любое место рабочего стола.'
   },
@@ -31,15 +43,23 @@ const AVAILABLE_TEMPLATES: WidgetTemplate[] = [
     type: 'cycle',
     title: 'Мой Цикл & Календарь',
     subtitle: 'Фаза, дни, фертильность и календарь',
-    emoji: '🌸',
+    icon: <Heart className="w-5 h-5 text-rose-500" />,
     defaultSize: 'large',
     description: 'Показывает день цикла, прогноз месячных, окно фертильности и интерактивную сетку календаря.'
+  },
+  {
+    type: 'tasks',
+    title: 'Задачи и Планы',
+    subtitle: 'План на день, чек-лист и прогресс',
+    icon: <CheckSquare className="w-5 h-5 text-blue-600" />,
+    defaultSize: 'medium',
+    description: 'Интерактивный список дел на сегодня, чек-лист подзадач и шкала прогресса выполнения.'
   },
   {
     type: 'water',
     title: 'Водный Баланс',
     subtitle: 'Трекер выпитой воды и быстрая добавка',
-    emoji: '💧',
+    icon: <Droplets className="w-5 h-5 text-sky-500" />,
     defaultSize: 'medium',
     description: 'Кольцо прогресса нормы воды и быстрые кнопки добавления +250 мл.'
   },
@@ -47,7 +67,7 @@ const AVAILABLE_TEMPLATES: WidgetTemplate[] = [
     type: 'pills',
     title: 'Лекарства и Витамины',
     subtitle: 'Напоминания и график приёма',
-    emoji: '💊',
+    icon: <PillIcon className="w-5 h-5 text-purple-600" />,
     defaultSize: 'medium',
     description: 'Ближайший приём таблеток или витаминов и отметка в 1 клик.'
   },
@@ -55,7 +75,7 @@ const AVAILABLE_TEMPLATES: WidgetTemplate[] = [
     type: 'tip',
     title: 'Совет Дня',
     subtitle: 'Рекомендации под вашу фазу цикла',
-    emoji: '💡',
+    icon: <Lightbulb className="w-5 h-5 text-amber-500" />,
     defaultSize: 'small',
     description: 'Полезные советы по питанию, тренировкам и самочувствию для текущего дня.'
   },
@@ -63,7 +83,7 @@ const AVAILABLE_TEMPLATES: WidgetTemplate[] = [
     type: 'divider',
     title: 'Дивидер / Отступ',
     subtitle: 'Разделитель или пустое пространство',
-    emoji: '➖',
+    icon: <Minus className="w-5 h-5 text-slate-500" />,
     defaultSize: 'small',
     description: 'Создает аккуратное разделение или пустое расстояние между блоками.'
   }
@@ -135,7 +155,9 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
                   }`}
                 >
                   <div className="flex items-start justify-between">
-                    <span className="text-2xl">{template.emoji}</span>
+                    <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
+                      {template.icon}
+                    </div>
                     {isActive && (
                       <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full">
                         На экране
@@ -159,26 +181,26 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setDividerStyle('blank')}
-                  className={`p-2.5 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer ${
+                  className={`p-2.5 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer flex flex-col items-center gap-1 ${
                     dividerStyle === 'blank'
                       ? 'bg-[#203A5F] text-white border-[#203A5F] shadow-xs'
                       : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                   }`}
                 >
-                  <span className="block text-sm mb-0.5">🔲</span>
+                  <Square className="w-4 h-4" />
                   <span>Пустой отступ</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setDividerStyle('line')}
-                  className={`p-2.5 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer ${
+                  className={`p-2.5 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer flex flex-col items-center gap-1 ${
                     dividerStyle === 'line'
                       ? 'bg-[#203A5F] text-white border-[#203A5F] shadow-xs'
                       : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                   }`}
                 >
-                  <span className="block text-sm mb-0.5">➖</span>
+                  <Minus className="w-4 h-4" />
                   <span>Линия</span>
                 </button>
               </div>
@@ -215,7 +237,9 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
           {/* Selected Description */}
           <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] text-[#595959] flex items-start gap-2">
-            <span className="text-base">{selectedType === 'photo' ? <Image className="w-4 h-4 text-[#203A5F] mt-0.5" /> : currentTemplate.emoji}</span>
+            <div className="w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
+              {currentTemplate.icon}
+            </div>
             <p className="leading-tight">{currentTemplate.description}</p>
           </div>
         </div>
@@ -227,7 +251,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
             className="w-full py-3.5 rounded-2xl bg-[#203A5F] hover:bg-[#1a2f4d] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-slate-300 active:scale-95 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>{isAlreadyActive ? 'Переместить на экран' : selectedType === 'photo' ? 'Добавить фото-виджет 🖼️' : 'Добавить на экран'}</span>
+            <span>{isAlreadyActive ? 'Переместить на экран' : selectedType === 'photo' ? 'Добавить фото-виджет' : 'Добавить на экран'}</span>
           </button>
         </div>
       </div>

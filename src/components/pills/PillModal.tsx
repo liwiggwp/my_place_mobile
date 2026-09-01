@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Pill, PillCategory, PillScheduleType } from '../../types';
-import { X, Plus, Trash2, Check, Clock } from 'lucide-react';
+import { X, Plus, Trash2, Check, Clock, Pill as PillIcon, Sun, Heart, Leaf } from 'lucide-react';
 
 interface PillModalProps {
   isOpen: boolean;
@@ -47,11 +47,11 @@ export const PillModal: React.FC<PillModalProps> = ({
 
   if (!isOpen) return null;
 
-  const categories: { id: PillCategory; label: string; icon: string }[] = [
-    { id: 'pill', label: 'Таблетки', icon: '💊' },
-    { id: 'vitamin', label: 'Витамины', icon: '☀️' },
-    { id: 'contraceptive', label: 'КОК / Контрацепция', icon: '🌸' },
-    { id: 'supplement', label: 'БАД / Добавка', icon: '🌿' }
+  const categories: { id: PillCategory; label: string; icon: React.ReactNode }[] = [
+    { id: 'pill', label: 'Таблетки', icon: <PillIcon className="w-4 h-4 text-purple-600" /> },
+    { id: 'vitamin', label: 'Витамины', icon: <Sun className="w-4 h-4 text-amber-500" /> },
+    { id: 'contraceptive', label: 'КОК / Контрацепция', icon: <Heart className="w-4 h-4 text-rose-500" /> },
+    { id: 'supplement', label: 'БАД / Добавка', icon: <Leaf className="w-4 h-4 text-emerald-600" /> }
   ];
 
   const colors = [
@@ -155,7 +155,9 @@ export const PillModal: React.FC<PillModalProps> = ({
                       : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  <span className="text-base">{c.icon}</span>
+                  <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center shadow-2xs">
+                    {c.icon}
+                  </div>
                   <span className="truncate">{c.label}</span>
                 </button>
               ))}
@@ -267,6 +269,7 @@ export const PillModal: React.FC<PillModalProps> = ({
                 onClose();
               }}
               className="p-3.5 rounded-2xl bg-rose-50 text-rose-500 hover:bg-rose-100 active:scale-90 transition-transform cursor-pointer"
+              title="Удалить препарат"
             >
               <Trash2 className="w-5 h-5" />
             </button>

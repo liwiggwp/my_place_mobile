@@ -11,7 +11,9 @@ import type {
   DrinkType,
   UserProfile,
   WidgetConfig,
-  AppThemeSettings
+  AppThemeSettings,
+  TaskItem,
+  TaskCategoryItem
 } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useSoundEffects } from './hooks/useSoundEffects';
@@ -36,6 +38,11 @@ import { CycleCalendar } from './components/cycle/CycleCalendar';
 import { CycleStats } from './components/cycle/CycleStats';
 import { SymptomModal } from './components/cycle/SymptomModal';
 
+// Tasks Components
+import { TasksView } from './components/tasks/TasksView';
+import { TaskModal } from './components/tasks/TaskModal';
+import { ManageCategoriesModal } from './components/tasks/ManageCategoriesModal';
+
 // Pill Components
 import { PillSummary } from './components/pills/PillSummary';
 import { PillCard } from './components/pills/PillCard';
@@ -54,10 +61,19 @@ import { DataImportModal } from './components/settings/DataImportModal';
 import { ProfileModal } from './components/profile/ProfileModal';
 import { ThemeCustomizerModal } from './components/theme/ThemeCustomizerModal';
 
+export const defaultTaskCategories: TaskCategoryItem[] = [
+  { id: 'personal', label: 'Личное', color: 'bg-indigo-50 text-indigo-700 border-indigo-200', isDefault: true },
+  { id: 'work', label: 'Работа', color: 'bg-blue-50 text-blue-700 border-blue-200', isDefault: true },
+  { id: 'health', label: 'Здоровье', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', isDefault: true },
+  { id: 'shopping', label: 'Покупки', color: 'bg-amber-50 text-amber-700 border-amber-200', isDefault: true },
+  { id: 'study', label: 'Учеба', color: 'bg-purple-50 text-purple-700 border-purple-200', isDefault: true },
+  { id: 'other', label: 'Другое', color: 'bg-slate-50 text-slate-700 border-slate-200', isDefault: true }
+];
+
 const defaultInitialData: AppData = {
   userProfile: {
     name: 'Мой профиль',
-    avatarEmoji: '🌸',
+    avatarEmoji: 'user',
     age: 25,
     height: 168,
     weight: 56,
@@ -81,6 +97,51 @@ const defaultInitialData: AppData = {
     averagePeriodLength: 5,
     lutealPhaseLength: 14
   },
+  taskCategories: defaultTaskCategories,
+  tasks: [
+    {
+      id: 'task-1',
+      title: 'Утренняя разминка и стакан воды',
+      description: 'Мягкая растяжка для бодрости и энергии',
+      date: getTodayString(),
+      time: '08:30',
+      priority: 'medium',
+      category: 'health',
+      completed: true,
+      subtasks: [
+        { id: 'st-1', title: '5 минут разминки', completed: true },
+        { id: 'st-2', title: 'Выпить 250 мл теплой воды', completed: true }
+      ],
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'task-2',
+      title: 'Прогулка на свежем воздухе',
+      description: '30-40 минут спокойной ходьбы в парке',
+      date: getTodayString(),
+      time: '18:00',
+      priority: 'high',
+      category: 'personal',
+      completed: false,
+      subtasks: [],
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'task-3',
+      title: 'Купить полезные продукты',
+      description: 'Овощи, ягоды, орехи, зеленый чай',
+      date: addDays(getTodayString(), 1),
+      time: '14:00',
+      priority: 'medium',
+      category: 'shopping',
+      completed: false,
+      subtasks: [
+        { id: 'st-3', title: 'Авокадо и шпинат', completed: false },
+        { id: 'st-4', title: 'Миндаль', completed: false }
+      ],
+      createdAt: new Date().toISOString()
+    }
+  ],
   pills: [
     {
       id: 'pill-1',
@@ -152,12 +213,18 @@ export function App() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
 
+  // Tasks modal state
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<TaskItem | null>(null);
+  const [taskModalDefaultDate, setTaskModalDefaultDate] = useState<string>(getTodayString());
+
   // Sound and Haptic
   const { playWaterDrop, playPillChime, playCelebration, playSoftClick, triggerVibrate } = useSoundEffects(
     appData.notificationSettings?.soundEnabled ?? true
   );
 
-  // Notifications
+  // Notifications (with active tasks array passed)
   const {
     permission,
     requestPermission,
@@ -168,7 +235,8 @@ export function App() {
     appData.notificationSettings,
     appData.pills,
     appData.pillLogs,
-    appData.waterSettings
+    appData.waterSettings,
+    appData.tasks || []
   );
 
   const todayStr = getTodayString();
@@ -179,6 +247,7 @@ export function App() {
   const profile = appData.userProfile || defaultInitialData.userProfile;
   const globalTheme = getScreenTheme(appData.themeSettings, 'global');
   const cycleTheme = getScreenTheme(appData.themeSettings, 'cycle');
+  const tasksTheme = getScreenTheme(appData.themeSettings, 'tasks');
   const waterTheme = getScreenTheme(appData.themeSettings, 'water');
   const pillsTheme = getScreenTheme(appData.themeSettings, 'pills');
 
@@ -256,6 +325,98 @@ export function App() {
         ...prev.dayLogs,
         [log.date]: log
       }
+    }));
+  };
+
+  /* ==========================================
+     TASKS HANDLERS
+     ========================================== */
+
+  const handleOpenAddTask = (defaultDate?: string) => {
+    playSoftClick();
+    setTaskToEdit(null);
+    setTaskModalDefaultDate(defaultDate || todayStr);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleOpenEditTask = (task: TaskItem) => {
+    playSoftClick();
+    setTaskToEdit(task);
+    setTaskModalDefaultDate(task.date);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleSaveTask = (taskData: Partial<TaskItem>) => {
+    playSoftClick();
+    setAppData(prev => {
+      const existingTasks = prev.tasks || [];
+      if (taskData.id) {
+        return {
+          ...prev,
+          tasks: existingTasks.map(t =>
+            t.id === taskData.id ? ({ ...t, ...taskData } as TaskItem) : t
+          )
+        };
+      } else {
+        const newTask: TaskItem = {
+          id: 'task-' + Date.now(),
+          title: taskData.title || 'Новая задача',
+          description: taskData.description,
+          date: taskData.date || todayStr,
+          time: taskData.time,
+          priority: taskData.priority || 'medium',
+          category: taskData.category || 'personal',
+          completed: false,
+          subtasks: taskData.subtasks || [],
+          repeat: taskData.repeat || 'none',
+          createdAt: new Date().toISOString()
+        };
+        return {
+          ...prev,
+          tasks: [newTask, ...existingTasks]
+        };
+      }
+    });
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    playSoftClick();
+    setAppData(prev => ({
+      ...prev,
+      tasks: (prev.tasks || []).filter(t => t.id !== taskId)
+    }));
+  };
+
+  const handleToggleTask = (taskId: string) => {
+    setAppData(prev => ({
+      ...prev,
+      tasks: (prev.tasks || []).map(t =>
+        t.id === taskId ? { ...t, completed: !t.completed } : t
+      )
+    }));
+  };
+
+  const handleToggleSubtask = (taskId: string, subtaskId: string) => {
+    setAppData(prev => ({
+      ...prev,
+      tasks: (prev.tasks || []).map(t => {
+        if (t.id !== taskId) return t;
+        const updatedSubtasks = (t.subtasks || []).map(st =>
+          st.id === subtaskId ? { ...st, completed: !st.completed } : st
+        );
+        return {
+          ...t,
+          subtasks: updatedSubtasks
+        };
+      })
+    }));
+  };
+
+  const handleSaveCategories = (newCategories: TaskCategoryItem[]) => {
+    playSoftClick();
+    setAppData(prev => ({
+      ...prev,
+      taskCategories: newCategories
     }));
   };
 
@@ -448,6 +609,7 @@ export function App() {
         avatarEmoji={profile.avatarEmoji}
         theme={
           currentTab === 'cycle' ? cycleTheme :
+          currentTab === 'tasks' ? tasksTheme :
           currentTab === 'water' ? waterTheme :
           currentTab === 'pills' ? pillsTheme : globalTheme
         }
@@ -511,6 +673,24 @@ export function App() {
               dayLogs={appData.dayLogs}
             />
           </div>
+        )}
+
+        {/* SUB-SCREEN: FULL TASKS (DAY / WEEK / MONTH) */}
+        {currentTab === 'tasks' && (
+          <TasksView
+            tasks={appData.tasks || []}
+            theme={tasksTheme}
+            categories={appData.taskCategories || defaultTaskCategories}
+            notificationPermission={permission}
+            onRequestPermission={requestPermission}
+            onTestNotification={testNotification}
+            onOpenManageCategories={() => setIsManageCategoriesOpen(true)}
+            onAddTask={handleOpenAddTask}
+            onToggleTask={handleToggleTask}
+            onToggleSubtask={handleToggleSubtask}
+            onEditTask={handleOpenEditTask}
+            onDeleteTask={handleDeleteTask}
+          />
         )}
 
         {/* SUB-SCREEN: FULL PILLS */}
@@ -623,6 +803,26 @@ export function App() {
         themeSettings={appData.themeSettings}
         onSaveThemeSettings={handleSaveThemeSettings}
         onClose={() => setIsThemeCustomizerOpen(false)}
+      />
+
+      <TaskModal
+        isOpen={isTaskModalOpen}
+        taskToEdit={taskToEdit}
+        defaultDate={taskModalDefaultDate}
+        theme={tasksTheme}
+        categories={appData.taskCategories || defaultTaskCategories}
+        onOpenManageCategories={() => setIsManageCategoriesOpen(true)}
+        onSave={handleSaveTask}
+        onDelete={handleDeleteTask}
+        onClose={() => setIsTaskModalOpen(false)}
+      />
+
+      <ManageCategoriesModal
+        isOpen={isManageCategoriesOpen}
+        categories={appData.taskCategories || defaultTaskCategories}
+        theme={tasksTheme}
+        onSaveCategories={handleSaveCategories}
+        onClose={() => setIsManageCategoriesOpen(false)}
       />
 
       <SymptomModal

@@ -10,9 +10,13 @@ import {
   Shield,
   Scale,
   Palette,
-  Sparkles
+  Sparkles,
+  Pill as PillIcon,
+  Droplets,
+  CheckSquare
 } from 'lucide-react';
 import { MyPlaceLogo } from '../common/MyPlaceLogo';
+import { UserAvatar } from '../common/UserAvatar';
 import { getScreenTheme } from '../../utils/themeUtils';
 
 interface SettingsViewProps {
@@ -49,7 +53,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const profile = appData.userProfile || {
     name: 'Мой профиль',
-    avatarEmoji: '🌸',
+    avatarEmoji: 'user',
     goal: 'track_cycle',
     contraception: 'condoms'
   };
@@ -113,8 +117,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-2xl border border-white/20 shadow-sm">
-              {profile.avatarEmoji || '🌸'}
+            <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-sm">
+              <UserAvatar avatarId={profile.avatarEmoji} className="w-6 h-6 text-white" />
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-200 bg-white/10 px-2 py-0.5 rounded-full">
@@ -288,7 +292,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Pill Reminders */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-              <span className="text-sm">💊</span>
+              <PillIcon className="w-4 h-4 text-purple-600" />
               <span>Напоминания о таблетках</span>
             </div>
             <button
@@ -310,7 +314,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Water Reminders */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-              <span className="text-sm">💧</span>
+              <Droplets className="w-4 h-4 text-sky-500" />
               <span>Напоминания пить воду</span>
             </div>
             <button
@@ -323,6 +327,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               style={appData.notificationSettings.waterReminders ? { backgroundColor: globalTheme.primary } : undefined}
               className={`w-11 h-6 rounded-full transition-colors p-0.5 flex items-center cursor-pointer ${
                 appData.notificationSettings.waterReminders ? 'justify-end' : 'bg-slate-300 justify-start'
+              }`}
+            >
+              <span className="w-5 h-5 rounded-full bg-white shadow-sm" />
+            </button>
+          </div>
+
+          {/* Task Reminders */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+              <CheckSquare className="w-4 h-4 text-indigo-600" />
+              <span>Напоминания о задачах</span>
+            </div>
+            <button
+              onClick={() =>
+                onUpdateNotifications({
+                  ...appData.notificationSettings,
+                  taskReminders: appData.notificationSettings.taskReminders === false ? true : false
+                })
+              }
+              style={appData.notificationSettings.taskReminders !== false ? { backgroundColor: globalTheme.primary } : undefined}
+              className={`w-11 h-6 rounded-full transition-colors p-0.5 flex items-center cursor-pointer ${
+                appData.notificationSettings.taskReminders !== false ? 'justify-end' : 'bg-slate-300 justify-start'
               }`}
             >
               <span className="w-5 h-5 rounded-full bg-white shadow-sm" />

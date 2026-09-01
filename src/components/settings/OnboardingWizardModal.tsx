@@ -123,9 +123,9 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
               Шаг {step} из 3
             </span>
             <h3 className="font-extrabold text-slate-800 text-base">
-              {step === 1 && '🌸 Настройка цикла'}
-              {step === 2 && '💊 Ваши таблетки и витамины'}
-              {step === 3 && '💧 Норма и напоминания воды'}
+              {step === 1 && 'Настройка цикла'}
+              {step === 2 && 'Ваши таблетки и витамины'}
+              {step === 3 && 'Норма и напоминания воды'}
             </h3>
           </div>
           <button
@@ -193,7 +193,7 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
               </div>
 
               <div className="p-3 rounded-2xl bg-rose-50 text-rose-700 text-xs leading-relaxed border border-rose-100">
-                ✨ Календарь автоматически рассчитает дни овуляции, окно фертильности и дату следующих месячных.
+                Календарь автоматически рассчитает дни овуляции, окно фертильности и дату следующих месячных.
               </div>
             </div>
           )}

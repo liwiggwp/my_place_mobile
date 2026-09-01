@@ -31,7 +31,7 @@ export const THEME_PRESETS: ThemePreset[] = [
 
 export const getScreenTheme = (
   themeSettings: AppThemeSettings | undefined,
-  screenKey: 'global' | 'cycle' | 'water' | 'pills'
+  screenKey: 'global' | 'cycle' | 'tasks' | 'water' | 'pills'
 ): DualColorTheme => {
   const global = themeSettings?.global || defaultGlobalTheme;
   if (screenKey === 'global') return global;

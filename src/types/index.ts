@@ -1,4 +1,4 @@
-export type TabType = 'home' | 'cycle' | 'pills' | 'water' | 'settings';
+export type TabType = 'home' | 'cycle' | 'tasks' | 'pills' | 'water' | 'settings';
 
 /* ==========================================
    THEME SETTINGS / НАСТРОЙКА ЦВЕТОВЫХ ТЕМ
@@ -12,6 +12,7 @@ export interface DualColorTheme {
 export interface AppThemeSettings {
   global: DualColorTheme;
   cycle?: DualColorTheme;   // optional override for Cycle
+  tasks?: DualColorTheme;   // optional override for Tasks
   water?: DualColorTheme;   // optional override for Water
   pills?: DualColorTheme;   // optional override for Pills
 }
@@ -20,11 +21,11 @@ export interface AppThemeSettings {
    WIDGETS CONFIGURATION / НАСТРОЙКА ВИДЖЕТОВ
    ========================================== */
 
-export type WidgetType = 'cycle' | 'water' | 'pills' | 'tip' | 'divider' | 'photo';
+export type WidgetType = 'cycle' | 'tasks' | 'water' | 'pills' | 'tip' | 'divider' | 'photo';
 export type WidgetSize = 'small' | 'medium' | 'large';
 
 export interface WidgetConfig {
-  id: string;              // unique ID (e.g. 'cycle', 'water', 'photo-1', 'divider-1')
+  id: string;              // unique ID (e.g. 'cycle', 'tasks', 'water', 'photo-1', 'divider-1')
   type: WidgetType;        // type of widget
   title: string;
   enabled: boolean;
@@ -35,6 +36,43 @@ export interface WidgetConfig {
   dividerStyle?: 'blank' | 'line';
   imageUrl?: string;       // Base64 data URL for photo widget
   imageCaption?: string;   // Optional photo caption
+}
+
+/* ==========================================
+   TASKS / ЗАДАЧИ И ПЛАНИРОВАНИЕ
+   ========================================== */
+
+export type TaskPriority = 'low' | 'medium' | 'high';
+export type TaskCategory = string;
+export type TaskViewMode = 'day' | 'week' | 'month';
+
+export interface TaskCategoryItem {
+  id: string;
+  label: string;
+  icon?: string;
+  color?: string; // Tailwind color class or hex
+  isDefault?: boolean;
+}
+
+export interface SubTask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+export interface TaskItem {
+  id: string;
+  title: string;
+  description?: string;
+  date: string; // YYYY-MM-DD
+  time?: string; // HH:mm (e.g. "14:30")
+  reminderMinutesBefore?: number; // 0, 5, 10, 15, 30, 60
+  priority: TaskPriority;
+  category: TaskCategory;
+  completed: boolean;
+  subtasks: SubTask[];
+  repeat?: 'none' | 'daily' | 'weekly' | 'monthly';
+  createdAt: string;
 }
 
 /* ==========================================
@@ -227,6 +265,7 @@ export interface NotificationSettings {
   vibrateEnabled: boolean;
   pillReminders: boolean;
   waterReminders: boolean;
+  taskReminders?: boolean;
   cycleReminders: boolean;
   cycleReminderDaysBefore: number;
 }
@@ -242,5 +281,7 @@ export interface AppData {
   pillLogs: PillLog[];
   waterLogs: WaterLog[];
   waterSettings: WaterSettings;
+  tasks: TaskItem[];
+  taskCategories?: TaskCategoryItem[];
   notificationSettings: NotificationSettings;
 }

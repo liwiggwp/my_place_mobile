@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import type { DayLog, FlowLevel, MoodType, SymptomType, SexActivity, IntimacyLog, IntimacyType, OrgasmStatus, LibidoLevel } from '../../types';
 import { formatFullRussianDate } from '../../utils/dateUtils';
-import { X, Check, Smile, Activity, FileText, Flame } from 'lucide-react';
+import {
+  X,
+  Check,
+  Smile,
+  Activity,
+  FileText,
+  Flame,
+  Heart,
+  Calendar,
+  Shield,
+  Zap,
+  Sparkles,
+  Droplets,
+  Star,
+  Circle
+} from 'lucide-react';
 
 interface SymptomModalProps {
   isOpen: boolean;
@@ -69,57 +84,57 @@ export const SymptomModal: React.FC<SymptomModalProps> = ({
 
   if (!isOpen) return null;
 
-  const flowOptions: { id: FlowLevel; label: string; icon: string }[] = [
-    { id: 'none', label: 'Нет', icon: '⚪' },
-    { id: 'spotting', label: 'Мажущие', icon: '💧' },
-    { id: 'light', label: 'Легкие', icon: '🩸' },
-    { id: 'medium', label: 'Средние', icon: '🩸🩸' },
-    { id: 'heavy', label: 'Обильные', icon: '🩸🩸🩸' }
+  const flowOptions: { id: FlowLevel; label: string; level: number }[] = [
+    { id: 'none', label: 'Нет', level: 0 },
+    { id: 'spotting', label: 'Мажущие', level: 1 },
+    { id: 'light', label: 'Легкие', level: 2 },
+    { id: 'medium', label: 'Средние', level: 3 },
+    { id: 'heavy', label: 'Обильные', level: 4 }
   ];
 
-  const moodOptions: { id: MoodType; label: string; emoji: string }[] = [
-    { id: 'happy', label: 'Счастье', emoji: '😊' },
-    { id: 'calm', label: 'Спокойствие', emoji: '🧘‍♀️' },
-    { id: 'energized', label: 'Энергия', emoji: '⚡' },
-    { id: 'romantic', label: 'Нежность', emoji: '💖' },
-    { id: 'sensitive', label: 'Ранимость', emoji: '🥺' },
-    { id: 'irritated', label: 'Раздражение', emoji: '😤' },
-    { id: 'sad', label: 'Грусть', emoji: '😢' },
-    { id: 'tired', label: 'Усталость', emoji: '🥱' },
-    { id: 'anxious', label: 'Тревожность', emoji: '😰' }
+  const moodOptions: { id: MoodType; label: string }[] = [
+    { id: 'happy', label: 'Счастье' },
+    { id: 'calm', label: 'Спокойствие' },
+    { id: 'energized', label: 'Энергия' },
+    { id: 'romantic', label: 'Нежность' },
+    { id: 'sensitive', label: 'Ранимость' },
+    { id: 'irritated', label: 'Раздражение' },
+    { id: 'sad', label: 'Грусть' },
+    { id: 'tired', label: 'Усталость' },
+    { id: 'anxious', label: 'Тревожность' }
   ];
 
-  const symptomOptions: { id: SymptomType; label: string; emoji: string }[] = [
-    { id: 'cramps', label: 'Спазмы / Боль', emoji: '⚡' },
-    { id: 'headache', label: 'Головная боль', emoji: '🤕' },
-    { id: 'bloating', label: 'Вздутие', emoji: '🎈' },
-    { id: 'backache', label: 'Боль в спине', emoji: '🪵' },
-    { id: 'tender_breasts', label: 'Чувствит. груди', emoji: '🌸' },
-    { id: 'acne', label: 'Высыпания', emoji: '🫧' },
-    { id: 'insomnia', label: 'Бессонница', emoji: '🌙' },
-    { id: 'cravings', label: 'Тяга к еде', emoji: '🍫' },
-    { id: 'nausea', label: 'Тошнота', emoji: '🤢' },
-    { id: 'fatigue', label: 'Слабость', emoji: '💤' }
+  const symptomOptions: { id: SymptomType; label: string }[] = [
+    { id: 'cramps', label: 'Спазмы / Боль' },
+    { id: 'headache', label: 'Головная боль' },
+    { id: 'bloating', label: 'Вздутие' },
+    { id: 'backache', label: 'Боль в спине' },
+    { id: 'tender_breasts', label: 'Чувствит. груди' },
+    { id: 'acne', label: 'Высыпания' },
+    { id: 'insomnia', label: 'Бессонница' },
+    { id: 'cravings', label: 'Тяга к еде' },
+    { id: 'nausea', label: 'Тошнота' },
+    { id: 'fatigue', label: 'Слабость' }
   ];
 
-  const intimacyTypes: { id: IntimacyType; label: string; icon: string; desc: string }[] = [
-    { id: 'protected', label: 'Защищенный', icon: '🛡️', desc: 'Презерватив / КОК' },
-    { id: 'unprotected', label: 'Незащищенный', icon: '⚡', desc: 'Без защиты' },
-    { id: 'oral_other', label: 'Оральный / Ласки', icon: '💋', desc: 'Непроникающий' },
-    { id: 'solo', label: 'Соло / Мастурбация', icon: '💖', desc: 'Наедине' }
+  const intimacyTypes: { id: IntimacyType; label: string; icon: React.ReactNode; desc: string }[] = [
+    { id: 'protected', label: 'Защищенный', icon: <Shield className="w-4 h-4 text-emerald-600" />, desc: 'Презерватив / КОК' },
+    { id: 'unprotected', label: 'Незащищенный', icon: <Zap className="w-4 h-4 text-rose-500" />, desc: 'Без защиты' },
+    { id: 'oral_other', label: 'Оральный / Ласки', icon: <Heart className="w-4 h-4 text-pink-500" />, desc: 'Непроникающий' },
+    { id: 'solo', label: 'Соло / Мастурбация', icon: <Sparkles className="w-4 h-4 text-indigo-500" />, desc: 'Наедине' }
   ];
 
-  const orgasmOptions: { id: OrgasmStatus; label: string; icon: string }[] = [
-    { id: 'yes', label: 'Был оргазм', icon: '✨' },
-    { id: 'multiple', label: 'Несколько', icon: '🌟' },
-    { id: 'no', label: 'Без оргазма', icon: '⚪' }
+  const orgasmOptions: { id: OrgasmStatus; label: string; icon: React.ReactNode }[] = [
+    { id: 'yes', label: 'Был оргазм', icon: <Sparkles className="w-3.5 h-3.5 text-amber-500" /> },
+    { id: 'multiple', label: 'Несколько', icon: <Star className="w-3.5 h-3.5 text-amber-500" /> },
+    { id: 'no', label: 'Без оргазма', icon: <Circle className="w-3.5 h-3.5 text-slate-400" /> }
   ];
 
-  const libidoOptions: { id: LibidoLevel; label: string; icon: string }[] = [
-    { id: 'calm', label: 'Низкое', icon: '🌿' },
-    { id: 'moderate', label: 'Умеренное', icon: '✨' },
-    { id: 'high', label: 'Высокое', icon: '🔥' },
-    { id: 'very_high', label: 'Максимальное', icon: '💥' }
+  const libidoOptions: { id: LibidoLevel; label: string; level: number }[] = [
+    { id: 'calm', label: 'Низкое', level: 1 },
+    { id: 'moderate', label: 'Умеренное', level: 2 },
+    { id: 'high', label: 'Высокое', level: 3 },
+    { id: 'very_high', label: 'Максимальное', level: 4 }
   ];
 
   const toggleMood = (m: MoodType) => {
@@ -180,7 +195,9 @@ export const SymptomModal: React.FC<SymptomModalProps> = ({
           {/* Period Toggle Button */}
           <div className="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-100 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="text-xl">🌸</span>
+              <div className="w-8 h-8 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600">
+                <Calendar className="w-4 h-4" />
+              </div>
               <div>
                 <p className="text-xs font-bold text-slate-800">Первый день месячных</p>
                 <p className="text-[11px] text-slate-500">Отметить начало нового цикла</p>
@@ -202,10 +219,12 @@ export const SymptomModal: React.FC<SymptomModalProps> = ({
           <div className="p-4 rounded-3xl bg-gradient-to-br from-pink-50/80 to-rose-50/50 border border-pink-200/80 space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-lg">💖</span>
+                <div className="w-8 h-8 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600">
+                  <Heart className="w-4 h-4" />
+                </div>
                 <div>
                   <h4 className="text-xs font-bold text-slate-800">Интимная жизнь</h4>
-                  <p className="text-[10px] text-slate-500">Отметка полового акта и сексуального желания</p>
+                  <p className="text-[10px] text-slate-500">Отметка контакта и сексуального желания</p>
                 </div>
               </div>
 
@@ -219,7 +238,7 @@ export const SymptomModal: React.FC<SymptomModalProps> = ({
                     : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                 }`}
               >
-                {hadSex ? '✓ Был половой акт' : '+ Был акт'}
+                {hadSex ? '✓ Был контакт' : '+ Был контакт'}
               </button>
             </div>
 
@@ -243,7 +262,9 @@ export const SymptomModal: React.FC<SymptomModalProps> = ({
                             : 'bg-white/60 border-slate-200 text-slate-600 hover:bg-white'
                         }`}
                       >
-                        <span className="text-base">{t.icon}</span>
+                        <div className="w-6 h-6 rounded-lg bg-pink-50 flex items-center justify-center shrink-0">
+                          {t.icon}
+                        </div>
                         <div>
                           <p className="text-xs leading-none">{t.label}</p>
                           <p className="text-[9px] text-slate-400 mt-0.5">{t.desc}</p>
@@ -287,13 +308,13 @@ export const SymptomModal: React.FC<SymptomModalProps> = ({
                         key={opt.id}
                         type="button"
                         onClick={() => setOrgasm(opt.id)}
-                        className={`py-1.5 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                        className={`py-1.5 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                           orgasm === opt.id
                             ? 'bg-white border-2 border-pink-400 text-pink-900 font-bold shadow-xs'
                             : 'bg-white/60 border border-slate-200 text-slate-600 hover:bg-white'
                         }`}
                       >
-                        <span>{opt.icon}</span>
+                        {opt.icon}
                         <span className="truncate text-[11px]">{opt.label}</span>
                       </button>
                     ))}
@@ -320,7 +341,6 @@ export const SymptomModal: React.FC<SymptomModalProps> = ({
                         : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                     }`}
                   >
-                    <span>{l.icon}</span>
                     <span>{l.label}</span>
                   </button>
                 ))}
@@ -331,6 +351,7 @@ export const SymptomModal: React.FC<SymptomModalProps> = ({
           {/* Flow */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+              <Droplets className="w-3.5 h-3.5 text-rose-500" />
               <span>Выделения</span>
             </h4>
             <div className="grid grid-cols-5 gap-1.5">
@@ -344,7 +365,9 @@ export const SymptomModal: React.FC<SymptomModalProps> = ({
                       : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
                   }`}
                 >
-                  <span className="text-sm">{opt.icon}</span>
+                  <span className="text-xs font-black">
+                    {opt.level === 0 ? '—' : '●'.repeat(opt.level)}
+                  </span>
                   <span className="text-[10px] leading-tight truncate">{opt.label}</span>
                 </button>
               ))}
@@ -370,7 +393,6 @@ export const SymptomModal: React.FC<SymptomModalProps> = ({
                         : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <span>{m.emoji}</span>
                     <span>{m.label}</span>
                   </button>
                 );
@@ -397,7 +419,6 @@ export const SymptomModal: React.FC<SymptomModalProps> = ({
                         : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <span>{s.emoji}</span>
                     <span>{s.label}</span>
                   </button>
                 );

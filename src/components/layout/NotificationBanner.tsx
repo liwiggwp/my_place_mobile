@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
-import { Bell, X, Droplets, Pill as PillIcon } from 'lucide-react';
+import { Bell, X, Droplets, Pill as PillIcon, CheckSquare } from 'lucide-react';
 
 interface NotificationBannerProps {
   alert: {
     id: string;
     title: string;
     body: string;
-    type: 'pill' | 'water' | 'cycle' | 'info';
+    type: 'pill' | 'water' | 'cycle' | 'task' | 'info';
   } | null;
   onDismiss: () => void;
 }
@@ -24,23 +24,27 @@ export const NotificationBanner: React.FC<NotificationBannerProps> = ({ alert, o
 
   const getIcon = () => {
     switch (alert.type) {
+      case 'task':
+        return <CheckSquare className="w-5 h-5 text-[#203A5F]" />;
       case 'pill':
         return <PillIcon className="w-5 h-5 text-purple-600" />;
       case 'water':
         return <Droplets className="w-5 h-5 text-sky-600" />;
       default:
-        return <Bell className="w-5 h-5 text-rose-600" />;
+        return <Bell className="w-5 h-5 text-slate-700" />;
     }
   };
 
   const getGradient = () => {
     switch (alert.type) {
+      case 'task':
+        return 'from-slate-800/5 to-slate-600/5 border-slate-300';
       case 'pill':
         return 'from-purple-500/10 to-indigo-500/10 border-purple-200';
       case 'water':
         return 'from-sky-500/10 to-blue-500/10 border-sky-200';
       default:
-        return 'from-rose-500/10 to-pink-500/10 border-rose-200';
+        return 'from-slate-500/10 to-slate-400/10 border-slate-200';
     }
   };
 
@@ -63,7 +67,7 @@ export const NotificationBanner: React.FC<NotificationBannerProps> = ({ alert, o
 
         <button
           onClick={onDismiss}
-          className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 active:scale-90 transition-transform"
+          className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 active:scale-90 transition-transform cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>

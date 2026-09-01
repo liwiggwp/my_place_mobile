@@ -3,6 +3,7 @@ import type { UserProfile } from '../../types';
 import { X, Check, Droplets, Scale } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { MyPlaceLogo } from '../common/MyPlaceLogo';
+import { AVATAR_ICONS } from '../common/UserAvatar';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -18,7 +19,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onClose
 }) => {
   const [name, setName] = useState(profile?.name || 'Мой профиль');
-  const [avatarEmoji, setAvatarEmoji] = useState(profile?.avatarEmoji || '🌸');
+  const [avatarEmoji, setAvatarEmoji] = useState(profile?.avatarEmoji || 'user');
   const [age, setAge] = useState<string>(profile?.age ? String(profile.age) : '25');
   const [height, setHeight] = useState<string>(profile?.height ? String(profile.height) : '168');
   const [weight, setWeight] = useState<string>(profile?.weight ? String(profile.weight) : '56');
@@ -27,7 +28,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   useEffect(() => {
     if (profile) {
       setName(profile.name || 'Мой профиль');
-      setAvatarEmoji(profile.avatarEmoji || '🌸');
+      setAvatarEmoji(profile.avatarEmoji || 'user');
       setAge(profile.age ? String(profile.age) : '25');
       setHeight(profile.height ? String(profile.height) : '168');
       setWeight(profile.weight ? String(profile.weight) : '56');
@@ -35,8 +36,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   }, [profile, isOpen]);
 
   if (!isOpen) return null;
-
-  const avatars = ['🌸', '🦋', '🐱', '✨', '🌺', '🌙', '👑', '🦄', '🍒', '🌿'];
 
   // BMI Calculation
   const heightM = (parseFloat(height) || 168) / 100;
@@ -117,26 +116,28 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               />
             </div>
 
-            {/* Avatar Selector without scale clipping */}
+            {/* Avatar Selector with Lucide vector icons */}
             <div className="pt-1">
               <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
                 Выберите иконку профиля:
               </label>
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 px-1">
-                {avatars.map(emoji => {
-                  const isSelected = avatarEmoji === emoji;
+                {AVATAR_ICONS.map(item => {
+                  const isSelected = avatarEmoji === item.id;
+                  const Icon = item.icon;
                   return (
                     <button
-                      key={emoji}
+                      key={item.id}
                       type="button"
-                      onClick={() => setAvatarEmoji(emoji)}
-                      className={`w-10 h-10 rounded-2xl text-lg flex items-center justify-center transition-all active:scale-90 cursor-pointer shrink-0 ${
+                      onClick={() => setAvatarEmoji(item.id)}
+                      className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-90 cursor-pointer shrink-0 ${
                         isSelected
-                          ? 'bg-[#203A5F]/15 border-2 border-[#203A5F] shadow-sm'
-                          : 'bg-slate-50 border border-slate-200 hover:bg-slate-100'
+                          ? 'bg-[#203A5F] text-white shadow-sm ring-2 ring-[#203A5F]/30'
+                          : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
                       }`}
+                      title={item.label}
                     >
-                      {emoji}
+                      <Icon className="w-5 h-5" />
                     </button>
                   );
                 })}

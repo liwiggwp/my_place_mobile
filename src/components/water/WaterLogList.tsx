@@ -1,6 +1,6 @@
 import React from 'react';
 import type { WaterLog } from '../../types';
-import { Trash2, Droplet } from 'lucide-react';
+import { Trash2, Droplet, Coffee, GlassWater } from 'lucide-react';
 
 interface WaterLogListProps {
   logs: WaterLog[];
@@ -27,13 +27,13 @@ export const WaterLogList: React.FC<WaterLogListProps> = ({ logs, onDeleteLog })
     }
   };
 
-  const getDrinkIcon = (type: string) => {
+  const renderDrinkIcon = (type: string) => {
     switch (type) {
       case 'tea':
       case 'coffee':
-        return '☕';
+        return <Coffee className="w-4 h-4 text-amber-600" />;
       default:
-        return '💧';
+        return <GlassWater className="w-4 h-4 text-sky-500" />;
     }
   };
 
@@ -50,7 +50,9 @@ export const WaterLogList: React.FC<WaterLogListProps> = ({ logs, onDeleteLog })
             className="flex items-center justify-between p-2.5 rounded-2xl bg-white/80 border border-sky-50 shadow-xs text-xs"
           >
             <div className="flex items-center gap-2.5">
-              <span className="text-base">{getDrinkIcon(log.type)}</span>
+              <div className="w-7 h-7 rounded-lg bg-sky-50 flex items-center justify-center">
+                {renderDrinkIcon(log.type)}
+              </div>
               <div>
                 <span className="font-bold text-slate-800">+{log.amount} мл</span>
                 <span className="text-[10px] text-slate-400 block font-medium">
@@ -61,7 +63,7 @@ export const WaterLogList: React.FC<WaterLogListProps> = ({ logs, onDeleteLog })
 
             <button
               onClick={() => onDeleteLog(log.id)}
-              className="p-1.5 rounded-xl hover:bg-rose-50 text-slate-300 hover:text-rose-500 active:scale-90 transition-all"
+              className="p-1.5 rounded-xl hover:bg-rose-50 text-slate-300 hover:text-rose-500 active:scale-90 transition-all cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />
             </button>

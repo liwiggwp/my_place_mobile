@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Pill, PillLog, PillStatus } from '../../types';
 import { getTodayString } from '../../utils/dateUtils';
-import { Check, Clock, X, Edit3 } from 'lucide-react';
+import { Check, Clock, X, Edit3, Pill as PillIcon, Sun, Heart, Leaf } from 'lucide-react';
 
 interface PillCardProps {
   pill: Pill;
@@ -16,13 +16,13 @@ export const PillCard: React.FC<PillCardProps> = ({ pill, logs, onLogStatus, onE
   const getPillIcon = () => {
     switch (pill.category) {
       case 'vitamin':
-        return '☀️';
+        return <Sun className="w-5 h-5 text-amber-500" />;
       case 'contraceptive':
-        return '🌸';
+        return <Heart className="w-5 h-5 text-rose-500" />;
       case 'supplement':
-        return '🌿';
+        return <Leaf className="w-5 h-5 text-emerald-500" />;
       default:
-        return '💊';
+        return <PillIcon className="w-5 h-5 text-purple-600" />;
     }
   };
 
@@ -32,7 +32,7 @@ export const PillCard: React.FC<PillCardProps> = ({ pill, logs, onLogStatus, onE
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl shadow-sm shrink-0"
+            className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm shrink-0"
             style={{ backgroundColor: `${pill.color}20`, border: `1px solid ${pill.color}40` }}
           >
             {getPillIcon()}
@@ -56,7 +56,7 @@ export const PillCard: React.FC<PillCardProps> = ({ pill, logs, onLogStatus, onE
 
         <button
           onClick={() => onEdit(pill)}
-          className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 active:scale-90 transition-transform"
+          className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 active:scale-90 transition-transform cursor-pointer"
         >
           <Edit3 className="w-4 h-4" />
         </button>
@@ -101,7 +101,7 @@ export const PillCard: React.FC<PillCardProps> = ({ pill, logs, onLogStatus, onE
                 {isTaken ? (
                   <button
                     onClick={() => onLogStatus(pill.id, time, 'skipped')}
-                    className="p-1.5 rounded-xl bg-emerald-100 text-emerald-700 text-[11px] font-bold flex items-center gap-1 active:scale-95 transition-all"
+                    className="p-1.5 rounded-xl bg-emerald-100 text-emerald-700 text-[11px] font-bold flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Выпито</span>
@@ -110,7 +110,7 @@ export const PillCard: React.FC<PillCardProps> = ({ pill, logs, onLogStatus, onE
                   <>
                     <button
                       onClick={() => onLogStatus(pill.id, time, 'taken')}
-                      className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold shadow-sm shadow-emerald-200 active:scale-95 transition-all flex items-center gap-1"
+                      className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold shadow-sm shadow-emerald-200 active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
                     >
                       <Check className="w-3.5 h-3.5" />
                       <span>Выпить</span>
@@ -118,7 +118,7 @@ export const PillCard: React.FC<PillCardProps> = ({ pill, logs, onLogStatus, onE
 
                     <button
                       onClick={() => onLogStatus(pill.id, time, 'skipped')}
-                      className="p-1.5 rounded-xl bg-slate-100 text-slate-400 hover:text-slate-600 active:scale-90 transition-transform"
+                      className="p-1.5 rounded-xl bg-slate-100 text-slate-400 hover:text-slate-600 active:scale-90 transition-transform cursor-pointer"
                       title="Пропустить"
                     >
                       <X className="w-3.5 h-3.5" />
