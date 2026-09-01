@@ -26,7 +26,6 @@ interface TasksViewProps {
   categories?: TaskCategoryItem[];
   notificationPermission?: NotificationPermission;
   onRequestPermission?: () => void;
-  onTestNotification?: () => void;
   onOpenManageCategories?: () => void;
   onAddTask: (defaultDate?: string) => void;
   onToggleTask: (taskId: string) => void;
@@ -50,7 +49,6 @@ export const TasksView: React.FC<TasksViewProps> = ({
   categories = DEFAULT_CATEGORIES,
   notificationPermission,
   onRequestPermission,
-  onTestNotification,
   onOpenManageCategories,
   onAddTask,
   onToggleTask,
@@ -280,8 +278,8 @@ export const TasksView: React.FC<TasksViewProps> = ({
 
   return (
     <div className="space-y-4 pb-24 animate-fade-in select-none">
-      {/* Notification Banner & Quick Test */}
-      {notificationPermission !== 'granted' && onRequestPermission ? (
+      {/* Notification Permission Banner if not granted */}
+      {notificationPermission !== 'granted' && onRequestPermission && (
         <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-2 shadow-2xs">
           <div className="flex items-center gap-2 min-w-0">
             <Bell className="w-4 h-4 text-amber-600 shrink-0" />
@@ -298,21 +296,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
             Разрешить
           </button>
         </div>
-      ) : onTestNotification ? (
-        <div className="flex items-center justify-between px-1 text-[11px] text-slate-500 font-semibold">
-          <span className="flex items-center gap-1">
-            <Bell className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Напоминания активны</span>
-          </span>
-          <button
-            type="button"
-            onClick={onTestNotification}
-            className="text-xs font-bold text-slate-700 underline cursor-pointer hover:text-slate-900"
-          >
-            Проверить звук и сигнал
-          </button>
-        </div>
-      ) : null}
+      )}
 
       {/* 1. TOP SEGMENTED SWITCHER: ДЕНЬ / НЕДЕЛЯ / МЕСЯЦ */}
       <div className="p-1 rounded-2xl bg-slate-100 flex items-center shadow-2xs">

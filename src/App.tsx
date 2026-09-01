@@ -22,6 +22,7 @@ import { getCyclePrediction, getLatestPeriod } from './utils/cycleCalculations';
 import { addDays, getTodayString } from './utils/dateUtils';
 import { defaultThemeSettings, getScreenTheme } from './utils/themeUtils';
 import confetti from 'canvas-confetti';
+import { Pill as PillIcon } from 'lucide-react';
 
 // Layout Components
 import { Header } from './components/layout/Header';
@@ -229,7 +230,6 @@ export function App() {
   const {
     permission,
     requestPermission,
-    testNotification,
     activeAlert,
     dismissAlert
   } = useNotifications(
@@ -684,7 +684,6 @@ export function App() {
             categories={appData.taskCategories || defaultTaskCategories}
             notificationPermission={permission}
             onRequestPermission={requestPermission}
-            onTestNotification={testNotification}
             onOpenManageCategories={() => setIsManageCategoriesOpen(true)}
             onAddTask={handleOpenAddTask}
             onToggleTask={handleToggleTask}
@@ -716,7 +715,7 @@ export function App() {
 
               {appData.pills.length === 0 ? (
                 <div className="p-8 rounded-3xl glass-card text-center text-[#595959]">
-                  <span className="text-4xl block mb-2">💊</span>
+                  <PillIcon className="w-10 h-10 mx-auto mb-2" style={{ color: pillsTheme.primary }} />
                   <p className="text-sm font-bold text-slate-800">Список пуст</p>
                   <p className="text-xs text-[#595959] mt-0.5">Добавьте витамины или таблетки для напоминаний</p>
                   <button
@@ -771,7 +770,6 @@ export function App() {
               appData={appData}
               notificationPermission={permission}
               onRequestPermission={requestPermission}
-              onTestNotification={testNotification}
               onUpdateNotifications={settings =>
                 setAppData(prev => ({ ...prev, notificationSettings: settings }))
               }

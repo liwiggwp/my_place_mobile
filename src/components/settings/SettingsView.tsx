@@ -23,7 +23,6 @@ interface SettingsViewProps {
   appData: AppData;
   notificationPermission: NotificationPermission;
   onRequestPermission: () => Promise<boolean>;
-  onTestNotification: () => void;
   onUpdateNotifications: (settings: NotificationSettings) => void;
   onImportData: (data: AppData) => void;
   onResetData: () => void;
@@ -38,7 +37,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   appData,
   notificationPermission,
   onRequestPermission,
-  onTestNotification,
   onUpdateNotifications,
   onImportData,
   onResetData,
@@ -248,20 +246,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
 
-          {notificationPermission !== 'granted' ? (
+          {notificationPermission !== 'granted' && (
             <button
               onClick={onRequestPermission}
               style={{ backgroundColor: globalTheme.primary }}
               className="px-3 py-1.5 rounded-xl text-white font-bold text-xs active:scale-95 shadow-xs cursor-pointer hover:opacity-90"
             >
               Включить
-            </button>
-          ) : (
-            <button
-              onClick={onTestNotification}
-              className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs active:scale-95 cursor-pointer hover:bg-slate-200"
-            >
-              Проверить
             </button>
           )}
         </div>
