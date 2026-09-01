@@ -1,0 +1,89 @@
+import React from 'react';
+import type { DualColorTheme } from '../../types';
+import { ArrowLeft } from 'lucide-react';
+import { MyPlaceLogo } from '../common/MyPlaceLogo';
+
+interface HeaderProps {
+  currentTab: string;
+  avatarEmoji?: string;
+  theme?: DualColorTheme;
+  onOpenInstall?: () => void;
+  onOpenProfile?: () => void;
+  onBackToHome?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  currentTab,
+  avatarEmoji = '🌸',
+  theme = { primary: '#203A5F', secondary: '#595959' },
+  onOpenProfile,
+  onBackToHome
+}) => {
+  const isSubScreen = currentTab === 'cycle' || currentTab === 'pills' || currentTab === 'water';
+
+  const getTabTitle = () => {
+    switch (currentTab) {
+      case 'home':
+        return 'MyPlace';
+      case 'cycle':
+        return 'Мой Цикл';
+      case 'pills':
+        return 'Таблетки и витамины';
+      case 'water':
+        return 'Водный Баланс';
+      case 'settings':
+        return 'Настройки';
+      default:
+        return 'MyPlace';
+    }
+  };
+
+  return (
+    <header className="sticky top-0 z-30 pt-safe px-5 pb-3 bg-white/90 backdrop-blur-xl border-b border-slate-200/70 shadow-xs transition-all">
+      <div className="flex items-center justify-between">
+        {isSubScreen ? (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBackToHome}
+              className="p-2 rounded-2xl bg-slate-50 shadow-xs border border-slate-200 text-slate-700 active:scale-90 transition-transform flex items-center gap-1.5 cursor-pointer hover:bg-slate-100"
+            >
+              <ArrowLeft className="w-5 h-5" style={{ color: theme.primary }} />
+              <span className="text-xs font-bold text-slate-700 pr-1">Главная</span>
+            </button>
+            <h1 className="text-xl font-extrabold tracking-tight" style={{ color: theme.primary }}>
+              {getTabTitle()}
+            </h1>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-slate-100/90 border border-slate-200/80 flex items-center justify-center p-1.5 shadow-2xs">
+              <MyPlaceLogo
+                className="w-7 h-7"
+                primaryColor={theme.primary}
+                secondaryColor={theme.secondary}
+              />
+            </div>
+            <h1 className="text-2xl font-black tracking-tight" style={{ color: theme.primary }}>
+              {getTabTitle()}
+            </h1>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          {/* Profile Avatar Button */}
+          <button
+            onClick={onOpenProfile}
+            title="Личный кабинет"
+            style={{
+              background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`
+            }}
+            className="w-10 h-10 rounded-2xl shadow-md shadow-slate-300 flex items-center justify-center text-white text-xl active:scale-90 transition-transform relative group border border-white/80 cursor-pointer"
+          >
+            <span>{avatarEmoji}</span>
+            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+};

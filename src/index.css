@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f1f5f9;
+    color: #1e293b;
+  }
+}
+
+/* Theme Colors:
+   Primary Navy: #203A5F
+   Secondary Graphite: #595959
+*/
+
+/* iOS Safe Areas */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pb-safe-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glassmorphism Styles themed for #203A5F and #595959 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Subtle, gentle iOS Jiggle / Wobble Animation */
+@keyframes ios-jiggle {
+  0% {
+    transform: rotate(-0.35deg) scale(0.998);
+  }
+  50% {
+    transform: rotate(0.35deg) scale(1.001);
+  }
+  100% {
+    transform: rotate(-0.35deg) scale(0.998);
+  }
+}
+
+@keyframes ios-jiggle-alt {
+  0% {
+    transform: rotate(0.35deg) scale(1.001);
+  }
+  50% {
+    transform: rotate(-0.35deg) scale(0.998);
+  }
+  100% {
+    transform: rotate(0.35deg) scale(1.001);
+  }
+}
+
+.animate-jiggle {
+  animation: ios-jiggle 0.32s ease-in-out infinite alternate;
+  transform-origin: center center;
+}
+
+.animate-jiggle-alt {
+  animation: ios-jiggle-alt 0.34s ease-in-out infinite alternate;
+  transform-origin: center center;
+}

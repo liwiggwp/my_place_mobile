@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Luna",
+    "slug": "luna-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fff1f2"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.luna.tracker",
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.luna.tracker"
+        ]
+      },
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
+        "NSUserTrackingUsageDescription": "Данные используются исключительно локально на вашем устройстве для напоминаний."
+      }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#f43f5e"
+        }
+      ],
+      "./plugins/withIosWidget"
+    ]
+  }
+}

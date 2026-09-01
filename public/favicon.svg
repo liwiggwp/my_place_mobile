@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Rounded Squircle Background (iOS App Icon Shape) -->
+  <rect width="512" height="512" rx="120" fill="#ffffff" />
+  
+  <!-- Subtle border -->
+  <rect x="6" y="6" width="500" height="500" rx="114" fill="none" stroke="#e2e8f0" stroke-width="12" />
+
+  <!-- Monogram MP in #203A5F and #595959 -->
+  <g transform="translate(100, 110) scale(3.2)">
+    <!-- Letter 'M' in Deep Navy Blue #203A5F -->
+    <path
+      d="M16 70V16C16 12 20 10 23 13L46 48L64 15C66 12 70 14 70 18V42"
+      stroke="#203A5F"
+      stroke-width="13"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <!-- Letter 'P' in Graphite Gray #595959 -->
+    <path
+      d="M66 15H74C83 15 89 21 89 30C89 39 83 45 74 45H66V70"
+      stroke="#595959"
+      stroke-width="13"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+</svg>
