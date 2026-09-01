@@ -13,7 +13,8 @@ import type {
   WidgetConfig,
   AppThemeSettings,
   TaskItem,
-  TaskCategoryItem
+  TaskCategoryItem,
+  DashboardDesktop
 } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useSoundEffects } from './hooks/useSoundEffects';
@@ -30,8 +31,9 @@ import { BottomNav } from './components/layout/BottomNav';
 import { NotificationBanner } from './components/layout/NotificationBanner';
 import { InstallPrompt } from './components/layout/InstallPrompt';
 
-// Home Dashboard
+// Home Dashboard & Desktops
 import { HomeDashboard, defaultWidgetsConfig } from './components/home/HomeDashboard';
+import { DesktopsView } from './components/desktops/DesktopsView';
 
 // Cycle Components
 import { CycleHero } from './components/cycle/CycleHero';
@@ -564,6 +566,47 @@ export function App() {
     }));
   };
 
+  const handleSelectCustomDesktop = (id: string) => {
+    setAppData(prev => ({
+      ...prev,
+      activeCustomDesktopId: id
+    }));
+  };
+
+  const handleCreateCustomDesktop = (newDesktop: DashboardDesktop) => {
+    setAppData(prev => {
+      const list = prev.customDesktops || [];
+      return {
+        ...prev,
+        customDesktops: [...list, newDesktop],
+        activeCustomDesktopId: newDesktop.id
+      };
+    });
+  };
+
+  const handleUpdateCustomDesktop = (updatedDesktop: DashboardDesktop) => {
+    setAppData(prev => {
+      const list = prev.customDesktops || [];
+      return {
+        ...prev,
+        customDesktops: list.map(d => (d.id === updatedDesktop.id ? updatedDesktop : d))
+      };
+    });
+  };
+
+  const handleDeleteCustomDesktop = (id: string) => {
+    setAppData(prev => {
+      const list = prev.customDesktops || [];
+      const remaining = list.filter(d => d.id !== id);
+      const nextActive = prev.activeCustomDesktopId === id ? remaining[0]?.id : prev.activeCustomDesktopId;
+      return {
+        ...prev,
+        customDesktops: remaining,
+        activeCustomDesktopId: nextActive
+      };
+    });
+  };
+
   const handleWizardComplete = (custom: Partial<AppData>) => {
     setAppData(prev => ({
       ...prev,
@@ -637,6 +680,27 @@ export function App() {
             onLogPillTaken={(pillId, scheduledTime) => handleLogPillStatus(pillId, scheduledTime, 'taken')}
             onOpenProfile={() => setIsProfileOpen(true)}
             onUpdateWidgets={handleSaveWidgetsConfig}
+          />
+        )}
+
+        {/* TAB 2: DEDICATED CUSTOM DESKTOPS */}
+        {currentTab === 'desktops' && (
+          <DesktopsView
+            appData={appData}
+            prediction={prediction}
+            customDesktops={appData.customDesktops || []}
+            activeCustomDesktopId={appData.activeCustomDesktopId}
+            theme={globalTheme}
+            onSelectDesktop={handleSelectCustomDesktop}
+            onCreateDesktop={handleCreateCustomDesktop}
+            onUpdateDesktop={handleUpdateCustomDesktop}
+            onDeleteDesktop={handleDeleteCustomDesktop}
+            onNavigate={tab => {
+              playSoftClick();
+              setCurrentTab(tab);
+            }}
+            onQuickAddWater={amount => handleAddWater(amount, 'water')}
+            onLogPillTaken={(pillId, scheduledTime) => handleLogPillStatus(pillId, scheduledTime, 'taken')}
           />
         )}
 

@@ -1,25 +1,32 @@
 import React, { useState } from 'react';
-import type { WidgetConfig, WidgetSize, WidgetType } from '../../types';
+import type { WidgetConfig, WidgetSize, WidgetType, TaskCategoryItem } from '../../types';
 import {
   X,
   Plus,
   Sparkles,
   Clock,
-  Image as ImageIcon,
-  Heart,
   CheckSquare,
   Droplets,
+  Heart,
   Pill as PillIcon,
   Lightbulb,
+  Image as ImageIcon,
   Minus,
   Square
 } from 'lucide-react';
 
-interface AddWidgetModalProps {
+interface AddDesktopWidgetModalProps {
   isOpen: boolean;
-  activeWidgets: WidgetConfig[];
-  onAddWidget: (type: WidgetType, size: WidgetSize, dividerStyle?: 'blank' | 'line', imageUrl?: string) => void;
   onClose: () => void;
+  onAddWidget: (
+    type: WidgetType,
+    size: WidgetSize,
+    taskCategoryFilter?: string,
+    dividerStyle?: 'blank' | 'line',
+    imageUrl?: string
+  ) => void;
+  activeWidgets: WidgetConfig[];
+  taskCategories?: TaskCategoryItem[];
 }
 
 interface WidgetTemplate {
@@ -41,6 +48,38 @@ const AVAILABLE_TEMPLATES: WidgetTemplate[] = [
     description: 'Отображает текущее время с секундами, день недели, дату и шкалу прогресса рабочего дня.'
   },
   {
+    type: 'tasks',
+    title: 'Задачи и Планы',
+    subtitle: 'План на день и фильтр категорий',
+    icon: <CheckSquare className="w-5 h-5 text-blue-600" />,
+    defaultSize: 'medium',
+    description: 'Интерактивный список дел на сегодня, чек-лист подзадач и возможность фильтрации по проекту.'
+  },
+  {
+    type: 'pills',
+    title: 'Лекарства и Витамины',
+    subtitle: 'Напоминания и график приёма',
+    icon: <PillIcon className="w-5 h-5 text-purple-600" />,
+    defaultSize: 'medium',
+    description: 'Ближайший приём таблеток или витаминов и отметка приема в 1 клик.'
+  },
+  {
+    type: 'water',
+    title: 'Водный Баланс',
+    subtitle: 'Трекер выпитой воды и норма',
+    icon: <Droplets className="w-5 h-5 text-sky-500" />,
+    defaultSize: 'medium',
+    description: 'Прогресс нормы воды за день и быстрые кнопки добавления +250 мл.'
+  },
+  {
+    type: 'cycle',
+    title: 'Мой Цикл & Календарь',
+    subtitle: 'Фаза, дни цикла и календарь',
+    icon: <Heart className="w-5 h-5 text-rose-500" />,
+    defaultSize: 'large',
+    description: 'Показывает день цикла, прогноз месячных, окно фертильности и интерактивную сетку календаря.'
+  },
+  {
     type: 'photo',
     title: 'Моё фото / Картинка',
     subtitle: 'Любое фото с телефона или ПК',
@@ -49,75 +88,49 @@ const AVAILABLE_TEMPLATES: WidgetTemplate[] = [
     description: 'Вставьте любимое фото, картинку или эстетичный постер в любое место рабочего стола.'
   },
   {
-    type: 'cycle',
-    title: 'Мой Цикл & Календарь',
-    subtitle: 'Фаза, дни, фертильность и календарь',
-    icon: <Heart className="w-5 h-5 text-rose-500" />,
-    defaultSize: 'large',
-    description: 'Показывает день цикла, прогноз месячных, окно фертильности и интерактивную сетку календаря.'
-  },
-  {
-    type: 'tasks',
-    title: 'Задачи и Планы',
-    subtitle: 'План на день, чек-лист и прогресс',
-    icon: <CheckSquare className="w-5 h-5 text-blue-600" />,
-    defaultSize: 'medium',
-    description: 'Интерактивный список дел на сегодня, чек-лист подзадач и шкала прогресса выполнения.'
-  },
-  {
-    type: 'water',
-    title: 'Водный Баланс',
-    subtitle: 'Трекер выпитой воды и быстрая добавка',
-    icon: <Droplets className="w-5 h-5 text-sky-500" />,
-    defaultSize: 'medium',
-    description: 'Кольцо прогресса нормы воды и быстрые кнопки добавления +250 мл.'
-  },
-  {
-    type: 'pills',
-    title: 'Лекарства и Витамины',
-    subtitle: 'Напоминания и график приёма',
-    icon: <PillIcon className="w-5 h-5 text-purple-600" />,
-    defaultSize: 'medium',
-    description: 'Ближайший приём таблеток или витаминов и отметка в 1 клик.'
-  },
-  {
     type: 'tip',
     title: 'Совет Дня',
-    subtitle: 'Рекомендации под вашу фазу цикла',
+    subtitle: 'Рекомендации и вдохновение',
     icon: <Lightbulb className="w-5 h-5 text-amber-500" />,
     defaultSize: 'small',
-    description: 'Полезные советы по питанию, тренировкам и самочувствию для текущего дня.'
+    description: 'Полезные советы и ежедневные напоминания о здоровье, концентрации и отдыхе.'
   },
   {
     type: 'divider',
     title: 'Дивидер / Отступ',
-    subtitle: 'Разделитель или пустое пространство',
+    subtitle: 'Разделитель или пространство',
     icon: <Minus className="w-5 h-5 text-slate-500" />,
     defaultSize: 'small',
     description: 'Создает аккуратное разделение или пустое расстояние между блоками.'
   }
 ];
 
-export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
+export const AddDesktopWidgetModal: React.FC<AddDesktopWidgetModalProps> = ({
   isOpen,
-  activeWidgets,
+  onClose,
   onAddWidget,
-  onClose
+  activeWidgets,
+  taskCategories = []
 }) => {
-  const [selectedType, setSelectedType] = useState<WidgetType>('photo');
+  const [selectedType, setSelectedType] = useState<WidgetType>('clock');
   const [selectedSize, setSelectedSize] = useState<WidgetSize>('small');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('');
   const [dividerStyle, setDividerStyle] = useState<'blank' | 'line'>('blank');
 
   if (!isOpen) return null;
 
   const currentTemplate = AVAILABLE_TEMPLATES.find(t => t.type === selectedType) || AVAILABLE_TEMPLATES[0];
-  const isAlreadyActive = selectedType !== 'divider' && selectedType !== 'photo' && activeWidgets.some(w => w.type === selectedType && w.enabled);
 
   const availableSizes: WidgetSize[] =
     selectedType === 'photo' ? ['small', 'large'] : ['small', 'medium', 'large'];
 
   const handleAdd = () => {
-    onAddWidget(selectedType, selectedSize, selectedType === 'divider' ? dividerStyle : undefined);
+    onAddWidget(
+      selectedType,
+      selectedSize,
+      selectedType === 'tasks' ? selectedCategoryFilter || undefined : undefined,
+      selectedType === 'divider' ? dividerStyle : undefined
+    );
     onClose();
   };
 
@@ -147,7 +160,12 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
           <div className="grid grid-cols-2 gap-2.5">
             {AVAILABLE_TEMPLATES.map(template => {
               const isSelected = selectedType === template.type;
-              const isActive = template.type !== 'divider' && template.type !== 'photo' && activeWidgets.some(w => w.type === template.type && w.enabled);
+              const isActive =
+                template.type !== 'divider' &&
+                template.type !== 'photo' &&
+                template.type !== 'tasks' &&
+                template.type !== 'clock' &&
+                activeWidgets.some(w => w.type === template.type && w.enabled);
 
               return (
                 <button
@@ -182,7 +200,46 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
             })}
           </div>
 
-          {/* Divider Style Picker (Line or Blank only) */}
+          {/* Task Category Filter Option (only for Tasks) */}
+          {selectedType === 'tasks' && (
+            <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2 animate-fade-in">
+              <span className="text-[11px] font-bold text-blue-800 uppercase tracking-wider block">
+                Фильтр задач для этого виджета
+              </span>
+              <p className="text-xs text-blue-700/80">
+                Вы можете сделать виджет только для рабочих задач, по здоровью или для всех.
+              </p>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategoryFilter('')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    selectedCategoryFilter === ''
+                      ? 'bg-[#203A5F] text-white shadow-xs'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Все задачи
+                </button>
+                {taskCategories.map(cat => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategoryFilter(cat.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      selectedCategoryFilter === cat.id
+                        ? 'bg-[#203A5F] text-white shadow-xs'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Divider Style Picker */}
           {selectedType === 'divider' && (
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
               <label className="text-xs font-bold text-slate-700 block">Тип разделителя / отступа:</label>
@@ -259,10 +316,10 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
         <div className="pt-3 border-t border-slate-100 shrink-0">
           <button
             onClick={handleAdd}
-            className="w-full py-3.5 rounded-2xl bg-[#203A5F] hover:bg-[#1a2f4d] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-slate-300 active:scale-95 transition-all cursor-pointer"
+            className="w-full py-3 rounded-2xl bg-[#203A5F] hover:bg-[#1a2f4d] text-white font-bold text-xs active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>{isAlreadyActive ? 'Переместить на экран' : selectedType === 'photo' ? 'Добавить фото-виджет' : 'Добавить на экран'}</span>
+            <span>Добавить на рабочий стол</span>
           </button>
         </div>
       </div>

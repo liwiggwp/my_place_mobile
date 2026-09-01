@@ -1,6 +1,6 @@
 import React from 'react';
 import type { TabType, DualColorTheme } from '../../types';
-import { LayoutGrid, SlidersHorizontal } from 'lucide-react';
+import { LayoutGrid, Layers, SlidersHorizontal } from 'lucide-react';
 
 interface BottomNavProps {
   currentTab: TabType;
@@ -21,6 +21,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       icon: LayoutGrid
     },
     {
+      id: 'desktops' as TabType,
+      label: 'Столы',
+      icon: Layers
+    },
+    {
       id: 'settings' as TabType,
       label: 'Настройки',
       icon: SlidersHorizontal
@@ -28,11 +33,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 px-6 pb-safe pt-2 bg-white/95 backdrop-blur-2xl border-t border-slate-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-safe pt-2 bg-white/95 backdrop-blur-2xl border-t border-slate-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]">
       <div className="max-w-md mx-auto flex items-center justify-around">
         {tabs.map(tab => {
           const Icon = tab.icon;
-          const isActive = currentTab === tab.id || (tab.id === 'home' && currentTab !== 'settings');
+          const isActive =
+            tab.id === 'desktops'
+              ? currentTab === 'desktops'
+              : tab.id === 'settings'
+              ? currentTab === 'settings'
+              : currentTab !== 'desktops' && currentTab !== 'settings';
 
           return (
             <button

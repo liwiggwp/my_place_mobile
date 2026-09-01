@@ -11,7 +11,7 @@ import {
   Check,
   Calendar,
   Flame,
-  Minus,
+  X,
   Maximize2,
   Camera,
   Image as ImageIcon,
@@ -451,8 +451,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     if (!isEditing) return null;
 
     return (
-      <div className="absolute inset-0 pointer-events-none z-30 flex items-start justify-between p-1.5 sm:p-2">
-        {/* Red (-) Delete Button */}
+      <>
+        {/* White (✕) Delete Button right on top-right corner protruding outside */}
         <button
           type="button"
           onPointerDown={e => e.stopPropagation()}
@@ -460,14 +460,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             e.stopPropagation();
             handleRemoveWidget(widget.id);
           }}
-          className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-600 hover:bg-rose-700 active:scale-90 text-white flex items-center justify-center shadow-lg border-2 border-white cursor-pointer transition-transform pointer-events-auto shrink-0"
+          className="absolute -top-2 -right-2 z-50 w-6 h-6 rounded-full bg-white hover:bg-slate-100 active:scale-90 text-slate-800 flex items-center justify-center font-bold shadow-md border border-slate-300/80 cursor-pointer transition-transform pointer-events-auto shrink-0 animate-fade-in"
           title="Удалить с экрана"
         >
-          <Minus className="w-3.5 h-3.5 stroke-[3]" />
+          <X className="w-3 h-3 stroke-[2.5]" />
         </button>
 
-        {/* Size Cycler Pill Badge */}
-        {widget.type !== 'divider' && (
+        {/* Size Cycler Button placed on bottom-right corner to NOT overlap top icons */}
+        {(widget.type !== 'divider' || widget.dividerStyle === 'blank') && (
           <button
             type="button"
             onPointerDown={e => e.stopPropagation()}
@@ -475,15 +475,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               e.stopPropagation();
               handleCycleSize(widget.id);
             }}
-            style={{ backgroundColor: globalTheme.primary }}
-            className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full active:scale-90 backdrop-blur-md text-white font-black text-[9px] sm:text-[10px] flex items-center gap-1 shadow-md border border-white/40 cursor-pointer transition-transform pointer-events-auto shrink-0"
+            className="absolute bottom-2 right-2 z-40 px-2 py-0.5 rounded-lg bg-slate-900/85 backdrop-blur-md text-white font-black text-[10px] uppercase shadow-md border border-white/30 flex items-center gap-1 active:scale-90 hover:bg-slate-900 cursor-pointer transition-transform pointer-events-auto shrink-0 animate-fade-in"
             title="Нажмите для смены размера"
           >
             <Maximize2 className="w-2.5 h-2.5" />
             <span>{widget.size.toUpperCase()}</span>
           </button>
         )}
-      </div>
+      </>
     );
   };
 
@@ -521,8 +520,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onPointerUp={handleCardPointerUp}
           onClick={() => !isEditing && onNavigate('cycle')}
           style={cardGradientStyle}
-          className={`relative p-3.5 sm:p-4 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow flex flex-col justify-between min-h-[160px] h-full select-none overflow-hidden ${
-            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          className={`relative p-3.5 sm:p-4 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow flex flex-col justify-between min-h-[160px] h-full select-none ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
           } ${jiggleClass}`}
         >
           {renderEditControls(widget)}
@@ -555,8 +554,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onPointerUp={handleCardPointerUp}
           onClick={() => !isEditing && onNavigate('cycle')}
           style={cardGradientStyle}
-          className={`relative p-5 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow select-none overflow-hidden ${
-            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          className={`relative p-5 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow select-none ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
           } ${jiggleClass}`}
         >
           {renderEditControls(widget)}
@@ -598,8 +597,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         onPointerUp={handleCardPointerUp}
         onClick={() => !isEditing && onNavigate('cycle')}
         style={cardGradientStyle}
-        className={`relative p-5 rounded-3xl text-white shadow-xl cursor-pointer active:scale-[0.98] transition-shadow select-none overflow-hidden ${
-          isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+        className={`relative p-5 rounded-3xl text-white shadow-xl cursor-pointer active:scale-[0.98] transition-shadow select-none ${
+          isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
         } ${jiggleClass}`}
       >
         {renderEditControls(widget)}
@@ -724,8 +723,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onPointerUp={handleCardPointerUp}
           onClick={() => !isEditing && onNavigate('water')}
           style={cardGradientStyle}
-          className={`relative p-3.5 sm:p-4 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow flex flex-col justify-between min-h-[160px] h-full select-none overflow-hidden ${
-            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          className={`relative p-3.5 sm:p-4 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow flex flex-col justify-between min-h-[160px] h-full select-none ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
           } ${jiggleClass}`}
         >
           {renderEditControls(widget)}
@@ -765,8 +764,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onPointerUp={handleCardPointerUp}
           onClick={() => !isEditing && onNavigate('water')}
           style={cardGradientStyle}
-          className={`relative p-5 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow select-none overflow-hidden ${
-            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          className={`relative p-5 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow select-none ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
           } ${jiggleClass}`}
         >
           {renderEditControls(widget)}
@@ -817,8 +816,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         onPointerUp={handleCardPointerUp}
         onClick={() => !isEditing && onNavigate('water')}
         style={cardGradientStyle}
-        className={`relative p-6 rounded-3xl text-white shadow-xl cursor-pointer active:scale-[0.98] transition-shadow select-none overflow-hidden ${
-          isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+        className={`relative p-6 rounded-3xl text-white shadow-xl cursor-pointer active:scale-[0.98] transition-shadow select-none ${
+          isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
         } ${jiggleClass}`}
       >
         {renderEditControls(widget)}
@@ -888,8 +887,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onPointerUp={handleCardPointerUp}
           onClick={() => !isEditing && onNavigate('pills')}
           style={cardGradientStyle}
-          className={`relative p-3.5 sm:p-4 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow flex flex-col justify-between min-h-[160px] h-full select-none overflow-hidden ${
-            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          className={`relative p-3.5 sm:p-4 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow flex flex-col justify-between min-h-[160px] h-full select-none ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
           } ${jiggleClass}`}
         >
           {renderEditControls(widget)}
@@ -929,8 +928,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onPointerUp={handleCardPointerUp}
           onClick={() => !isEditing && onNavigate('pills')}
           style={cardGradientStyle}
-          className={`relative p-5 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow select-none overflow-hidden ${
-            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          className={`relative p-5 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow select-none ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
           } ${jiggleClass}`}
         >
           {renderEditControls(widget)}
@@ -968,8 +967,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         onPointerUp={handleCardPointerUp}
         onClick={() => !isEditing && onNavigate('pills')}
         style={cardGradientStyle}
-        className={`relative p-6 rounded-3xl text-white shadow-xl cursor-pointer active:scale-[0.98] transition-shadow select-none overflow-hidden ${
-          isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+        className={`relative p-6 rounded-3xl text-white shadow-xl cursor-pointer active:scale-[0.98] transition-shadow select-none ${
+          isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
         } ${jiggleClass}`}
       >
         {renderEditControls(widget)}
@@ -1052,8 +1051,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onPointerDown={e => handleCardPointerDown(e, widget.id)}
           onPointerUp={handleCardPointerUp}
           style={dragStyle}
-          className={`relative p-3.5 sm:p-4 rounded-3xl glass-card border border-slate-200 shadow-xs flex flex-col justify-between min-h-[160px] h-full select-none overflow-hidden ${
-            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          className={`relative p-3.5 sm:p-4 rounded-3xl glass-card border border-slate-200 shadow-xs flex flex-col justify-between min-h-[160px] h-full select-none ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
           } ${jiggleClass}`}
         >
           {renderEditControls(widget)}
@@ -1084,8 +1083,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onPointerDown={e => handleCardPointerDown(e, widget.id)}
           onPointerUp={handleCardPointerUp}
           style={dragStyle}
-          className={`relative p-4 rounded-3xl glass-card border border-slate-200 shadow-xs flex items-start gap-3 select-none overflow-hidden ${
-            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          className={`relative p-4 rounded-3xl glass-card border border-slate-200 shadow-xs flex items-start gap-3 select-none ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
           } ${jiggleClass}`}
         >
           {renderEditControls(widget)}
@@ -1111,8 +1110,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         onPointerDown={e => handleCardPointerDown(e, widget.id)}
         onPointerUp={handleCardPointerUp}
         style={dragStyle}
-        className={`relative p-5 rounded-3xl glass-card border border-slate-200 shadow-sm space-y-3 select-none overflow-hidden ${
-          isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+        className={`relative p-5 rounded-3xl glass-card border border-slate-200 shadow-sm space-y-3 select-none ${
+          isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
         } ${jiggleClass}`}
       >
         {renderEditControls(widget)}
@@ -1158,7 +1157,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       : {};
 
     if (style === 'blank') {
-      const heightClass = widget.size === 'small' ? 'min-h-[160px]' : widget.size === 'medium' ? 'min-h-[220px]' : 'min-h-[320px]';
+      const heightClass =
+        widget.size === 'small'
+          ? 'min-h-[80px]'
+          : widget.size === 'medium'
+          ? 'min-h-[160px]'
+          : 'min-h-[260px]';
+
       return (
         <div
           key={widget.id}
@@ -1167,13 +1172,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onPointerUp={handleCardPointerUp}
           style={dragStyle}
           className={`relative ${heightClass} w-full transition-all flex items-center justify-center select-none ${
-            isEditing ? 'border-2 border-dashed rounded-3xl touch-none cursor-grab active:cursor-grabbing' : ''
+            isEditing ? 'border-2 border-dashed border-slate-300 rounded-3xl touch-none cursor-grab active:cursor-grabbing overflow-visible bg-slate-50/50' : 'overflow-hidden'
           } ${jiggleClass}`}
         >
           {renderEditControls(widget)}
           {isEditing && (
-            <span className="text-xs font-bold pointer-events-none" style={{ color: globalTheme.primary }}>
-              Пустой отступ
+            <span className="text-xs font-bold pointer-events-none text-slate-400">
+              Пустой отступ ({widget.size.toUpperCase()})
             </span>
           )}
         </div>
@@ -1189,7 +1194,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         onPointerUp={handleCardPointerUp}
         style={dragStyle}
         className={`relative py-3 flex items-center justify-center select-none ${
-          isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
         } ${jiggleClass}`}
       >
         {renderEditControls(widget)}
@@ -1228,8 +1233,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           }
         }}
         style={dragStyle}
-        className={`relative ${minHeightClass} w-full rounded-3xl overflow-hidden shadow-md border border-slate-200 select-none group cursor-pointer transition-shadow bg-white ${
-          isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+        className={`relative ${minHeightClass} w-full rounded-3xl shadow-md border border-slate-200 select-none group cursor-pointer transition-shadow bg-white ${
+          isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
         } ${jiggleClass}`}
       >
         {renderEditControls(widget)}
@@ -1301,8 +1306,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onPointerUp={handleCardPointerUp}
           onClick={() => !isEditing && onNavigate('tasks')}
           style={cardGradientStyle}
-          className={`relative p-3.5 sm:p-4 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow flex flex-col justify-between min-h-[160px] h-full select-none overflow-hidden ${
-            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          className={`relative p-3.5 sm:p-4 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow flex flex-col justify-between min-h-[160px] h-full select-none ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
           } ${jiggleClass}`}
         >
           {renderEditControls(widget)}
@@ -1335,8 +1340,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           onPointerUp={handleCardPointerUp}
           onClick={() => !isEditing && onNavigate('tasks')}
           style={cardGradientStyle}
-          className={`relative p-4 sm:p-5 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow select-none overflow-hidden ${
-            isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+          className={`relative p-4 sm:p-5 rounded-3xl text-white shadow-md cursor-pointer active:scale-[0.98] transition-shadow select-none ${
+            isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
           } ${jiggleClass}`}
         >
           {renderEditControls(widget)}
@@ -1385,8 +1390,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         onPointerUp={handleCardPointerUp}
         onClick={() => !isEditing && onNavigate('tasks')}
         style={cardGradientStyle}
-        className={`relative p-5 sm:p-6 rounded-3xl text-white shadow-xl cursor-pointer active:scale-[0.98] transition-shadow select-none overflow-hidden space-y-3 ${
-          isEditing ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+        className={`relative p-5 sm:p-6 rounded-3xl text-white shadow-xl cursor-pointer active:scale-[0.98] transition-shadow select-none space-y-3 ${
+          isEditing ? 'touch-none cursor-grab active:cursor-grabbing overflow-visible' : 'overflow-hidden'
         } ${jiggleClass}`}
       >
         {renderEditControls(widget)}

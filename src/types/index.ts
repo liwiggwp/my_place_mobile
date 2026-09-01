@@ -1,4 +1,4 @@
-export type TabType = 'home' | 'cycle' | 'tasks' | 'pills' | 'water' | 'settings';
+export type TabType = 'home' | 'desktops' | 'cycle' | 'tasks' | 'pills' | 'water' | 'settings';
 
 /* ==========================================
    THEME SETTINGS / НАСТРОЙКА ЦВЕТОВЫХ ТЕМ
@@ -21,7 +21,7 @@ export interface AppThemeSettings {
    WIDGETS CONFIGURATION / НАСТРОЙКА ВИДЖЕТОВ
    ========================================== */
 
-export type WidgetType = 'cycle' | 'tasks' | 'water' | 'pills' | 'tip' | 'divider' | 'photo';
+export type WidgetType = 'cycle' | 'tasks' | 'water' | 'pills' | 'tip' | 'divider' | 'photo' | 'clock';
 export type WidgetSize = 'small' | 'medium' | 'large';
 
 export interface WidgetConfig {
@@ -36,6 +36,14 @@ export interface WidgetConfig {
   dividerStyle?: 'blank' | 'line';
   imageUrl?: string;       // Base64 data URL for photo widget
   imageCaption?: string;   // Optional photo caption
+  taskCategoryFilter?: string; // Optional task category filter for tasks widgets on desktops
+}
+
+export interface DashboardDesktop {
+  id: string;
+  name: string;
+  icon?: string;
+  widgets: WidgetConfig[];
 }
 
 /* ==========================================
@@ -274,6 +282,8 @@ export interface AppData {
   userProfile: UserProfile;
   themeSettings?: AppThemeSettings;
   widgetsConfig: WidgetConfig[];
+  customDesktops?: DashboardDesktop[];
+  activeCustomDesktopId?: string;
   periods: CyclePeriod[];
   dayLogs: Record<string, DayLog>; // key: YYYY-MM-DD
   cycleSettings: CycleSettings;
