@@ -434,8 +434,8 @@ export const TasksView: React.FC<TasksViewProps> = ({
               </p>
             </div>
 
-            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center shrink-0">
-              <span className="text-lg font-black">{dayProgressPercent}%</span>
+            <div className="min-w-[56px] px-3 py-2 rounded-2xl bg-white/20 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center shrink-0 whitespace-nowrap">
+              <span className="text-base font-black">{dayProgressPercent}%</span>
             </div>
           </div>
 

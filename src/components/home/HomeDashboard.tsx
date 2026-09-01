@@ -839,12 +839,12 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         } ${jiggleClass}`}
       >
         {renderEditControls(widget)}
-        <div className="flex items-start justify-between pointer-events-none">
-          <div>
+        <div className="flex items-start justify-between pointer-events-none gap-2">
+          <div className="min-w-0 flex-1">
             <span className="text-xs font-bold text-white/80 uppercase tracking-wider block">Дневная норма воды</span>
             <h3 className="text-3xl font-black mt-1">{currentWaterTotal} <span className="text-base font-semibold text-white/70">/ {waterGoal} мл</span></h3>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20 text-lg font-black">
+          <div className="min-w-[54px] px-2.5 py-1.5 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20 text-sm font-black shrink-0 whitespace-nowrap">
             {waterPercent}%
           </div>
         </div>
@@ -1429,17 +1429,17 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         } ${jiggleClass}`}
       >
         {renderEditControls(widget)}
-        <div className="flex items-start justify-between pointer-events-none">
-          <div>
-            <span className="text-xs font-bold text-white/80 uppercase tracking-wider block">План и задачи на день</span>
-            <h3 className="text-2xl font-black mt-0.5">
-              {todayTasksList.length === 0 ? 'Свободный день' : `Выполнено ${completedTasksCount} из ${todayTasksList.length}`}
-            </h3>
+          <div className="flex items-start justify-between pointer-events-none gap-2">
+            <div className="min-w-0 flex-1">
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider block">План и задачи на день</span>
+              <h3 className="text-2xl font-black mt-0.5 truncate">
+                {todayTasksList.length === 0 ? 'Свободный день' : `Выполнено ${completedTasksCount} из ${todayTasksList.length}`}
+              </h3>
+            </div>
+            <div className="min-w-[52px] px-2.5 py-1.5 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-xs font-black shrink-0 whitespace-nowrap">
+              {progressPercent}%
+            </div>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-base font-black">
-            {progressPercent}%
-          </div>
-        </div>
 
         {/* Progress Bar */}
         <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden pointer-events-none">

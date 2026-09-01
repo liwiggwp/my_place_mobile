@@ -7,7 +7,6 @@ import {
   Download,
   Upload,
   Trash2,
-  Shield,
   Scale,
   Palette,
   Sparkles,
@@ -52,8 +51,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const profile = appData.userProfile || {
     name: 'Мой профиль',
     avatarEmoji: 'user',
-    goal: 'track_cycle',
-    contraception: 'condoms'
+    goal: 'track_cycle'
   };
 
   const getGoalTitle = (g: string) => {
@@ -62,16 +60,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       case 'plan_pregnancy': return 'Планирование зачатия';
       case 'prevent_pregnancy': return 'Предотвращение беременности';
       default: return 'Здоровье и привычки';
-    }
-  };
-
-  const getContraceptionTitle = (c: string) => {
-    switch (c) {
-      case 'pills': return 'КОК (таблетки)';
-      case 'condoms': return 'Презервативы';
-      case 'iud': return 'ВМС (спираль)';
-      case 'patch_ring': return 'Пластырь / Кольцо';
-      default: return 'Без контрацепции';
     }
   };
 
@@ -139,8 +127,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* Profile Quick Stats */}
         <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/15 text-xs">
           <div className="flex items-center gap-1.5 text-white/90">
-            <Shield className="w-3.5 h-3.5 text-slate-200" />
-            <span className="truncate">{getContraceptionTitle(profile.contraception)}</span>
+            <span>{profile.height ? `Рост: ${profile.height} см` : profile.age ? `Возраст: ${profile.age} лет` : 'Параметры профиля'}</span>
           </div>
           <div className="flex items-center gap-1.5 text-white/90 justify-end">
             <Scale className="w-3.5 h-3.5 text-slate-200" />
