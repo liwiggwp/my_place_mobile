@@ -27,13 +27,7 @@ jobs:
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
-      - name: Setup Xcode
-        uses: maxim-lobachev/xcode-install@v0.1
-        with:
-          xcode-version: 'latest-stable'
-        continue-on-error: true
-
-      - name: Build iOS App (.app / .ipa)
+      - name: Build iOS Archive and Package IPA
         run: |
           cd ios/App
           xcodebuild -workspace App.xcworkspace \
@@ -44,11 +38,12 @@ jobs:
             archive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY=""
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER=""
           
           mkdir -p Payload
           cp -r build/App.xcarchive/Products/Applications/App.app Payload/
-          zip -r MyPlace.ipa Payload
+          zip -qr MyPlace.ipa Payload
           mv MyPlace.ipa ../../MyPlace.ipa
 
       - name: Upload IPA Artifact
