@@ -137,6 +137,11 @@ export function useNotifications(
         return result === 'granted';
       }
 
+      if (typeof window !== 'undefined' && location.protocol === 'http:' && location.hostname !== 'localhost') {
+        alert('Apple требует защищенное соединение HTTPS для уведомлений.\n\nПо локальному адресу (http://192...) iOS блокирует уведомления. Разверните приложение на Vercel (https://...) для работы системных уведомлений.');
+        return false;
+      }
+
       alert('Уведомления не поддерживаются вашим браузером. На iPhone добавьте приложение на экран «Домой» (Safari iOS 16.4+) для поддержки системных уведомлений.');
       return false;
     } catch (err) {
