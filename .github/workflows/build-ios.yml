@@ -30,7 +30,7 @@ jobs:
       - name: Build iOS Archive and Package IPA
         run: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace \
+          xcodebuild -project App.xcodeproj \
             -scheme App \
             -configuration Release \
             -destination 'generic/platform=iOS' \
