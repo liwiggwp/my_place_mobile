@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { NotificationSettings, Pill, PillLog, WaterSettings, TaskItem } from '../types';
 import { getTodayString } from '../utils/dateUtils';
+import { NativeNotificationService } from '../services/nativeNotificationService';
 
 // Helper for playing pleasant chime using Web Audio API
 function playChimeSound() {
@@ -109,23 +110,35 @@ export function useNotifications(
   }, []);
 
   const requestPermission = async (): Promise<boolean> => {
-    if (typeof window === 'undefined' || !('Notification' in window)) {
-      alert('Уведомления не поддерживаются вашим браузером. На iPhone добавьте приложение на экран «Домой» (Safari iOS 16.4+) для поддержки системных уведомлений.');
-      return false;
-    }
-
     try {
-      const result = await Notification.requestPermission();
-      setPermission(result);
-      if (result === 'granted') {
+      const nativeGranted = await NativeNotificationService.requestPermissions();
+      if (nativeGranted) {
+        setPermission('granted');
         sendNotification(
           'MyPlace: Уведомления включены',
           'Теперь вы будете получать звуковые и системные напоминания о задачах и воде!',
           '/favicon.svg',
           'info'
         );
+        return true;
       }
-      return result === 'granted';
+
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        const result = await Notification.requestPermission();
+        setPermission(result);
+        if (result === 'granted') {
+          sendNotification(
+            'MyPlace: Уведомления включены',
+            'Теперь вы будете получать звуковые и системные напоминания о задачах и воде!',
+            '/favicon.svg',
+            'info'
+          );
+        }
+        return result === 'granted';
+      }
+
+      alert('Уведомления не поддерживаются вашим браузером. На iPhone добавьте приложение на экран «Домой» (Safari iOS 16.4+) для поддержки системных уведомлений.');
+      return false;
     } catch (err) {
       console.error('Failed to request notification permission:', err);
       return false;
