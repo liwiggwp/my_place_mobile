@@ -1,3 +1,5 @@
+import { NativeHapticsService } from '../services/hapticsService';
+
 export function useSoundEffects(soundEnabled: boolean = true) {
   const getAudioContext = () => {
     try {
@@ -114,6 +116,18 @@ export function useSoundEffects(soundEnabled: boolean = true) {
   };
 
   const triggerVibrate = (pattern: number | number[] = 20) => {
+    if (typeof pattern === 'number') {
+      if (pattern >= 30) {
+        NativeHapticsService.heavyBump();
+      } else if (pattern >= 20) {
+        NativeHapticsService.mediumTick();
+      } else {
+        NativeHapticsService.lightClick();
+      }
+    } else {
+      NativeHapticsService.successCelebration();
+    }
+
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       try {
         navigator.vibrate(pattern);

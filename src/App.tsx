@@ -64,6 +64,9 @@ import { OnboardingWizardModal } from './components/settings/OnboardingWizardMod
 import { ProfileModal } from './components/profile/ProfileModal';
 import { ThemeCustomizerModal } from './components/theme/ThemeCustomizerModal';
 
+// Native iOS & Mobile Services (Offline Scheduled Alarms)
+import { NativeNotificationService } from './services/nativeNotificationService';
+
 export const defaultTaskCategories: TaskCategoryItem[] = [
   { id: 'personal', label: 'Личное', color: 'bg-indigo-50 text-indigo-700 border-indigo-200', isDefault: true },
   { id: 'work', label: 'Работа', color: 'bg-blue-50 text-blue-700 border-blue-200', isDefault: true },
@@ -286,6 +289,17 @@ export function App() {
       return changed ? { ...prev, pills: updatedPills } : prev;
     });
   }, [todayStr, setAppData]);
+
+  // Sync native iOS background alarms & local notifications
+  useEffect(() => {
+    NativeNotificationService.syncAllReminders(appData);
+  }, [
+    appData.notificationSettings,
+    appData.pills,
+    appData.tasks,
+    appData.periods,
+    appData.cycleSettings
+  ]);
 
   // iOS Edge Swipe Left-to-Right gesture listener to Go Back
   useEffect(() => {
