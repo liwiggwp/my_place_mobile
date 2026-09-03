@@ -173,4 +173,40 @@ export class NativeNotificationService {
       console.warn('Failed to schedule native notifications:', err);
     }
   }
+
+  /**
+   * Schedule an instant test notification in 5 seconds
+   */
+  static async scheduleTestNotification(): Promise<boolean> {
+    if (this.isNative) {
+      try {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              id: 9999,
+              title: '🌸 MyPlace: Тестовое уведомление',
+              body: 'Отлично! Фоновые уведомления и звук работают идеально даже при закрытом приложении.',
+              schedule: {
+                at: new Date(Date.now() + 5000),
+                allowWhileIdle: true
+              }
+            }
+          ]
+        });
+        return true;
+      } catch (e) {
+        console.warn('Failed to schedule test notification:', e);
+        return false;
+      }
+    } else if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      setTimeout(() => {
+        new Notification('🌸 MyPlace: Тестовое уведомление', {
+          body: 'Отлично! Уведомления активны.',
+          icon: 'favicon.svg'
+        });
+      }, 5000);
+      return true;
+    }
+    return false;
+  }
 }

@@ -17,6 +17,7 @@ import {
 import { MyPlaceLogo } from '../common/MyPlaceLogo';
 import { UserAvatar } from '../common/UserAvatar';
 import { getScreenTheme } from '../../utils/themeUtils';
+import { NativeNotificationService } from '../../services/nativeNotificationService';
 
 interface SettingsViewProps {
   appData: AppData;
@@ -368,6 +369,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               }`}
             >
               <span className="w-5 h-5 rounded-full bg-white shadow-sm" />
+            </button>
+          </div>
+
+          {/* Test Background Notification Button */}
+          <div className="pt-2 border-t border-slate-100">
+            <button
+              onClick={async () => {
+                const scheduled = await NativeNotificationService.scheduleTestNotification();
+                if (scheduled) {
+                  alert('🔔 Тест запущен!\n\nСверните приложение или заблокируйте телефон прямо сейчас — ровно через 5 секунд придет звуковое уведомление.');
+                }
+              }}
+              className="w-full py-2.5 px-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer shadow-2xs"
+            >
+              <Bell className="w-3.5 h-3.5" style={{ color: globalTheme.primary }} />
+              <span>Проверить фоновое уведомление (5 сек)</span>
             </button>
           </div>
         </div>
