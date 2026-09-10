@@ -16,6 +16,8 @@ import type {
   TaskCategoryItem,
   DashboardDesktop,
   FinancialTransaction,
+  FinancialAccount,
+  AccountType,
   FinanceSettings,
   TransactionType
 } from './types';
@@ -25,7 +27,7 @@ import { useNotifications } from './hooks/useNotifications';
 import { getCyclePrediction, getLatestPeriod } from './utils/cycleCalculations';
 import { addDays, getTodayString } from './utils/dateUtils';
 import { defaultThemeSettings, getScreenTheme } from './utils/themeUtils';
-import { getDefaultSampleTransactions } from './utils/financeUtils';
+import { getDefaultSampleTransactions, getDefaultSampleAccounts } from './utils/financeUtils';
 import confetti from 'canvas-confetti';
 import { Pill as PillIcon, ChevronDown } from 'lucide-react';
 
@@ -54,6 +56,9 @@ import { ManageCategoriesModal } from './components/tasks/ManageCategoriesModal'
 import { FinanceView } from './components/finance/FinanceView';
 import { TransactionModal } from './components/finance/TransactionModal';
 import { BudgetModal } from './components/finance/BudgetModal';
+import { AccountModal } from './components/finance/AccountModal';
+import { TransferModal } from './components/finance/TransferModal';
+import { DebtPayModal } from './components/finance/DebtPayModal';
 
 // Pill Components
 import { PillSummary } from './components/pills/PillSummary';
@@ -210,6 +215,7 @@ const defaultInitialData: AppData = {
     glassSize: 250
   },
   transactions: getDefaultSampleTransactions(),
+  accounts: getDefaultSampleAccounts(),
   financeSettings: {
     currency: '₽',
     monthlyBudgetLimit: 60000,
@@ -250,6 +256,16 @@ export function App() {
   const [transactionDefaultType, setTransactionDefaultType] = useState<TransactionType>('expense');
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
 
+  // Accounts, Transfer & Debt modal state
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [accountToEdit, setAccountToEdit] = useState<FinancialAccount | null>(null);
+  const [accountDefaultType, setAccountDefaultType] = useState<AccountType>('card');
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [transferDefaultFromId, setTransferDefaultFromId] = useState<string | undefined>();
+  const [transferDefaultToId, setTransferDefaultToId] = useState<string | undefined>();
+  const [isDebtPayModalOpen, setIsDebtPayModalOpen] = useState(false);
+  const [debtAccountToPay, setDebtAccountToPay] = useState<FinancialAccount | null>(null);
+
   // Tasks modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false);
@@ -279,9 +295,14 @@ export function App() {
   const todayStr = getTodayString();
 
   useEffect(() => {
-    // Migration helper: ensure initial default pills have course dates if missing
+    // Migration helper: ensure initial default pills have course dates & accounts exist if missing
     setAppData(prev => {
       let changed = false;
+      let nextAccounts = prev.accounts;
+      if (!nextAccounts || nextAccounts.length === 0) {
+        nextAccounts = getDefaultSampleAccounts();
+        changed = true;
+      }
       const updatedPills = (prev.pills || []).map(p => {
         if (!p.isCourse && !p.courseEndDate) {
           if (p.id === 'pill-1' || p.name.includes('Витамин D')) {
@@ -307,7 +328,7 @@ export function App() {
         }
         return p;
       });
-      return changed ? { ...prev, pills: updatedPills } : prev;
+      return changed ? { ...prev, accounts: nextAccounts, pills: updatedPills } : prev;
     });
   }, [todayStr, setAppData]);
 
@@ -785,9 +806,42 @@ export function App() {
 
     setAppData(prev => {
       const currentList = prev.transactions || [];
+      const currentAccounts = [...(prev.accounts || [])];
+
+      // If transaction is linked to an account, adjust balances
+      if (txData.accountId && currentAccounts.length > 0) {
+        const accIndex = currentAccounts.findIndex(a => a.id === txData.accountId);
+        if (accIndex !== -1) {
+          const acc = { ...currentAccounts[accIndex] };
+          const oldTx = editId ? currentList.find(t => t.id === editId) : undefined;
+          
+          // Reverse old transaction impact if editing
+          if (oldTx && oldTx.accountId === txData.accountId) {
+            if (oldTx.type === 'expense') {
+              if (acc.type === 'credit_card') acc.balance -= oldTx.amount;
+              else acc.balance += oldTx.amount;
+            } else if (oldTx.type === 'income') {
+              if (acc.type === 'credit_card' || acc.type === 'loan' || acc.type === 'debt') acc.balance += oldTx.amount;
+              else acc.balance -= oldTx.amount;
+            }
+          }
+
+          // Apply new transaction impact
+          if (txData.type === 'expense') {
+            if (acc.type === 'credit_card') acc.balance += txData.amount;
+            else acc.balance -= txData.amount;
+          } else if (txData.type === 'income') {
+            if (acc.type === 'credit_card' || acc.type === 'loan' || acc.type === 'debt') acc.balance = Math.max(0, acc.balance - txData.amount);
+            else acc.balance += txData.amount;
+          }
+          currentAccounts[accIndex] = acc;
+        }
+      }
+
       if (editId) {
         return {
           ...prev,
+          accounts: currentAccounts,
           transactions: currentList.map(t =>
             t.id === editId
               ? { ...t, ...txData }
@@ -802,6 +856,7 @@ export function App() {
         };
         return {
           ...prev,
+          accounts: currentAccounts,
           transactions: [newTx, ...currentList]
         };
       }
@@ -815,6 +870,114 @@ export function App() {
       ...prev,
       transactions: (prev.transactions || []).filter(t => t.id !== id)
     }));
+  };
+
+  const handleSaveAccount = (
+    accountData: Omit<FinancialAccount, 'id' | 'createdAt'>,
+    editId?: string
+  ) => {
+    playPillChime();
+    triggerVibrate();
+
+    setAppData(prev => {
+      const currentList = prev.accounts || [];
+      if (editId) {
+        return {
+          ...prev,
+          accounts: currentList.map(a =>
+            a.id === editId ? { ...a, ...accountData } : a
+          )
+        };
+      } else {
+        const newAccount: FinancialAccount = {
+          ...accountData,
+          id: `acc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          createdAt: new Date().toISOString()
+        };
+        return {
+          ...prev,
+          accounts: [...currentList, newAccount]
+        };
+      }
+    });
+  };
+
+  const handleDeleteAccount = (id: string) => {
+    playSoftClick();
+    triggerVibrate();
+    setAppData(prev => ({
+      ...prev,
+      accounts: (prev.accounts || []).filter(a => a.id !== id)
+    }));
+  };
+
+  const handleTransfer = (
+    fromAccountId: string,
+    toAccountId: string,
+    amount: number,
+    note?: string
+  ) => {
+    playPillChime();
+    triggerVibrate();
+
+    setAppData(prev => {
+      const accounts = [...(prev.accounts || [])];
+      const fromIndex = accounts.findIndex(a => a.id === fromAccountId);
+      const toIndex = accounts.findIndex(a => a.id === toAccountId);
+
+      if (fromIndex !== -1 && toIndex !== -1) {
+        const fromAcc = accounts[fromIndex];
+        const toAcc = accounts[toIndex];
+
+        // Deduct from source account (or increase balance if credit card was used)
+        accounts[fromIndex] = {
+          ...fromAcc,
+          balance: fromAcc.type === 'credit_card'
+            ? fromAcc.balance + amount
+            : fromAcc.balance - amount
+        };
+
+        // Add to destination account (or reduce balance if paying debt/loan/credit card)
+        accounts[toIndex] = {
+          ...toAcc,
+          balance: (toAcc.type === 'credit_card' || toAcc.type === 'loan' || toAcc.type === 'debt')
+            ? Math.max(0, toAcc.balance - amount)
+            : toAcc.balance + amount
+        };
+      }
+
+      const fromAcc = accounts.find(a => a.id === fromAccountId);
+      const toAcc = accounts.find(a => a.id === toAccountId);
+
+      const transferTx: FinancialTransaction = {
+        id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        type: 'transfer',
+        amount,
+        category: 'transfer',
+        title: note || `Перевод: ${fromAcc?.name || 'Счет'} → ${toAcc?.name || 'Счет'}`,
+        accountId: fromAccountId,
+        toAccountId: toAccountId,
+        date: getTodayString(),
+        time: new Date().toTimeString().substring(0, 5),
+        createdAt: new Date().toISOString()
+      };
+
+      return {
+        ...prev,
+        accounts,
+        transactions: [transferTx, ...(prev.transactions || [])]
+      };
+    });
+  };
+
+  const handleDebtPayment = (
+    fromAccountId: string,
+    debtAccountId: string,
+    amount: number,
+    note?: string
+  ) => {
+    handleTransfer(fromAccountId, debtAccountId, amount, note);
+    setIsDebtPayModalOpen(false);
   };
 
   const handleSaveFinanceSettings = (newSettings: FinanceSettings) => {
@@ -1101,12 +1264,32 @@ export function App() {
           <div className="animate-fade-in">
             <FinanceView
               transactions={appData.transactions || []}
+              accounts={appData.accounts || []}
               settings={appData.financeSettings}
               theme={financeTheme}
               onOpenAddTransaction={handleOpenAddTransaction}
               onEditTransaction={handleEditTransaction}
               onDeleteTransaction={handleDeleteTransaction}
               onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+              onOpenAddAccount={(type) => {
+                setAccountDefaultType(type || 'card');
+                setAccountToEdit(null);
+                setIsAccountModalOpen(true);
+              }}
+              onEditAccount={(acc) => {
+                setAccountToEdit(acc);
+                setIsAccountModalOpen(true);
+              }}
+              onDeleteAccount={handleDeleteAccount}
+              onOpenTransferModal={(fromId, toId) => {
+                setTransferDefaultFromId(fromId);
+                setTransferDefaultToId(toId);
+                setIsTransferModalOpen(true);
+              }}
+              onOpenDebtPayModal={(debtAcc) => {
+                setDebtAccountToPay(debtAcc);
+                setIsDebtPayModalOpen(true);
+              }}
             />
           </div>
         )}
@@ -1147,6 +1330,7 @@ export function App() {
       {/* Modals */}
       <TransactionModal
         isOpen={isTransactionModalOpen}
+        accounts={appData.accounts || []}
         transactionToEdit={transactionToEdit}
         defaultType={transactionDefaultType}
         currency={appData.financeSettings?.currency || '₽'}
@@ -1154,6 +1338,38 @@ export function App() {
         onSave={handleSaveTransaction}
         onDelete={handleDeleteTransaction}
         onClose={() => setIsTransactionModalOpen(false)}
+      />
+
+      <AccountModal
+        isOpen={isAccountModalOpen}
+        accountToEdit={accountToEdit}
+        defaultType={accountDefaultType}
+        currency={appData.financeSettings?.currency || '₽'}
+        theme={financeTheme}
+        onSave={handleSaveAccount}
+        onDelete={handleDeleteAccount}
+        onClose={() => setIsAccountModalOpen(false)}
+      />
+
+      <TransferModal
+        isOpen={isTransferModalOpen}
+        accounts={appData.accounts || []}
+        defaultFromAccountId={transferDefaultFromId}
+        defaultToAccountId={transferDefaultToId}
+        currency={appData.financeSettings?.currency || '₽'}
+        theme={financeTheme}
+        onTransfer={handleTransfer}
+        onClose={() => setIsTransferModalOpen(false)}
+      />
+
+      <DebtPayModal
+        isOpen={isDebtPayModalOpen}
+        debtAccount={debtAccountToPay}
+        accounts={appData.accounts || []}
+        currency={appData.financeSettings?.currency || '₽'}
+        theme={financeTheme}
+        onPay={handleDebtPayment}
+        onClose={() => setIsDebtPayModalOpen(false)}
       />
 
       <BudgetModal

@@ -307,7 +307,7 @@ export const FinanceWidget: React.FC<FinanceWidgetProps> = ({
           <p className="text-xs text-white/70 py-2 pointer-events-none">Операций пока нет</p>
         ) : (
           transactions.slice(0, 3).map(tx => {
-            const meta = getCategoryMeta(tx.category, tx.type);
+            const meta = getCategoryMeta(tx.category, tx.type === 'income' ? 'income' : 'expense');
             const Icon = CATEGORY_ICON_MAP[meta.icon] || Tag;
             const isExpense = tx.type === 'expense';
 

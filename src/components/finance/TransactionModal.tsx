@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { FinancialTransaction, TransactionType, DualColorTheme } from '../../types';
+import type { FinancialTransaction, TransactionType, DualColorTheme, FinancialAccount } from '../../types';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../../utils/financeUtils';
 import { getTodayString } from '../../utils/dateUtils';
 import {
@@ -29,6 +29,7 @@ import {
 
 interface TransactionModalProps {
   isOpen: boolean;
+  accounts?: FinancialAccount[];
   transactionToEdit?: FinancialTransaction | null;
   defaultType?: TransactionType;
   currency?: string;
@@ -57,10 +58,11 @@ const CATEGORY_ICON_MAP: Record<string, React.ElementType> = {
   PlusCircle
 };
 
-const ACCOUNT_OPTIONS = ['Основная карта', 'Наличные', 'Накопительный счет', 'Кредитка', 'Другое'];
+const DEFAULT_ACCOUNT_OPTIONS = ['Основная карта', 'Наличные', 'Накопительный счет', 'Кредитка', 'Другое'];
 
 export const TransactionModal: React.FC<TransactionModalProps> = ({
   isOpen,
+  accounts = [],
   transactionToEdit,
   defaultType = 'expense',
   currency = '₽',
@@ -73,7 +75,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const [amount, setAmount] = useState<string>('');
   const [category, setCategory] = useState<string>('food');
   const [title, setTitle] = useState<string>('');
-  const [account, setAccount] = useState<string>('Основная карта');
+  const [accountId, setAccountId] = useState<string>('');
+  const [accountName, setAccountName] = useState<string>('Основная карта');
   const [date, setDate] = useState<string>(getTodayString());
   const [time, setTime] = useState<string>('');
 
@@ -84,7 +87,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         setAmount(transactionToEdit.amount.toString());
         setCategory(transactionToEdit.category);
         setTitle(transactionToEdit.title || '');
-        setAccount(transactionToEdit.account || 'Основная карта');
+        setAccountId(transactionToEdit.accountId || '');
+        setAccountName(transactionToEdit.account || 'Основная карта');
         setDate(transactionToEdit.date || getTodayString());
         setTime(transactionToEdit.time || '');
       } else {
@@ -92,7 +96,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         setAmount('');
         setCategory(defaultType === 'expense' ? 'food' : 'salary');
         setTitle('');
-        setAccount('Основная карта');
+        const firstAcc = accounts.find(a => !a.isArchived);
+        setAccountId(firstAcc?.id || '');
+        setAccountName(firstAcc?.name || 'Основная карта');
         setDate(getTodayString());
         const now = new Date();
         const hh = String(now.getHours()).padStart(2, '0');
@@ -100,7 +106,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         setTime(`${hh}:${mm}`);
       }
     }
-  }, [isOpen, transactionToEdit, defaultType]);
+  }, [isOpen, transactionToEdit, defaultType, accounts]);
 
   if (!isOpen) return null;
 
@@ -134,7 +140,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         amount: numAmount,
         category,
         title: title.trim() || undefined,
-        account,
+        account: accountName,
+        accountId: accountId || undefined,
         date,
         time: time || undefined
       },
@@ -301,20 +308,52 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700">Счет / Кошелек</label>
             <div className="flex items-center gap-1.5 flex-wrap">
-              {ACCOUNT_OPTIONS.map(acc => (
-                <button
-                  key={acc}
-                  type="button"
-                  onClick={() => setAccount(acc)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                    account === acc
-                      ? 'bg-slate-800 text-white border-slate-800 shadow-2xs'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  {acc}
-                </button>
-              ))}
+              {accounts.length > 0 ? (
+                accounts
+                  .filter(a => !a.isArchived)
+                  .map(acc => {
+                    const isSelected = accountId === acc.id || accountName === acc.name;
+                    return (
+                      <button
+                        key={acc.id}
+                        type="button"
+                        onClick={() => {
+                          setAccountId(acc.id);
+                          setAccountName(acc.name);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-slate-800 text-white border-slate-800 shadow-2xs'
+                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span
+                          style={{ backgroundColor: acc.color || '#1e293b' }}
+                          className="w-2 h-2 rounded-full"
+                        />
+                        <span>{acc.name}</span>
+                      </button>
+                    );
+                  })
+              ) : (
+                DEFAULT_ACCOUNT_OPTIONS.map(acc => (
+                  <button
+                    key={acc}
+                    type="button"
+                    onClick={() => {
+                      setAccountId('');
+                      setAccountName(acc);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                      accountName === acc
+                        ? 'bg-slate-800 text-white border-slate-800 shadow-2xs'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {acc}
+                  </button>
+                ))
+              )}
             </div>
           </div>
 

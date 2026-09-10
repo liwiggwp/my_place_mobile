@@ -1,4 +1,4 @@
-import type { FinancialTransaction, FinanceSettings } from '../types';
+import type { FinancialTransaction, FinanceSettings, FinancialAccount } from '../types';
 import { getTodayString, addDays } from './dateUtils';
 
 export interface FinanceCategoryMeta {
@@ -312,4 +312,190 @@ export function getDefaultSampleTransactions(): FinancialTransaction[] {
       createdAt: new Date().toISOString()
     }
   ];
+}
+
+export function getDefaultSampleAccounts(): FinancialAccount[] {
+  const today = getTodayString();
+  return [
+    {
+      id: 'acc-1',
+      name: 'Основная карта (Black)',
+      type: 'card',
+      balance: 48500,
+      currency: '₽',
+      color: '#1e293b',
+      icon: 'CreditCard',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'acc-2',
+      name: 'Наличные (кошелек)',
+      type: 'cash',
+      balance: 4200,
+      currency: '₽',
+      color: '#059669',
+      icon: 'Banknote',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'acc-3',
+      name: 'Заначка на отпуск 🌴',
+      type: 'savings',
+      balance: 75000,
+      targetAmount: 150000,
+      targetDate: addDays(today, 90),
+      currency: '₽',
+      color: '#d97706',
+      icon: 'PiggyBank',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'acc-4',
+      name: 'Подушка безопасности 🛡️',
+      type: 'savings',
+      balance: 100000,
+      targetAmount: 150000,
+      currency: '₽',
+      color: '#2563eb',
+      icon: 'Shield',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'acc-5',
+      name: 'Кредитная карта 120 дней 💳',
+      type: 'credit_card',
+      balance: 14500,
+      creditLimit: 100000,
+      monthlyPayment: 3500,
+      paymentDueDay: 20,
+      gracePeriodDays: 120,
+      currency: '₽',
+      color: '#e11d48',
+      icon: 'CreditCard',
+      notes: 'Льготный период без процентов до 20 числа',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'acc-6',
+      name: 'Рассрочка на ноутбук 💻',
+      type: 'loan',
+      balance: 24000,
+      creditLimit: 48000,
+      monthlyPayment: 8000,
+      paymentDueDay: 15,
+      currency: '₽',
+      color: '#7c3aed',
+      icon: 'Landmark',
+      notes: 'Ежемесячный платеж 15 числа каждого месяца',
+      createdAt: new Date().toISOString()
+    }
+  ];
+}
+
+export function calculateNetWorth(accounts: FinancialAccount[] = []) {
+  let totalAssets = 0;
+  let totalDebts = 0;
+  let totalSavings = 0;
+
+  accounts.forEach(acc => {
+    const amt = Math.abs(acc.balance || 0);
+    if (acc.type === 'credit_card' || acc.type === 'loan' || acc.type === 'debt') {
+      totalDebts += amt;
+    } else if (acc.type === 'savings') {
+      totalSavings += amt;
+      totalAssets += amt;
+    } else {
+      totalAssets += amt;
+    }
+  });
+
+  const netWorth = totalAssets - totalDebts;
+
+  return {
+    totalAssets,
+    totalDebts,
+    totalSavings,
+    netWorth
+  };
+}
+
+export interface DebtPaymentInfo {
+  account: FinancialAccount;
+  paymentAmount: number;
+  dueDate: string; // YYYY-MM-DD
+  dueDay: number;
+  daysRemaining: number;
+  status: 'overdue' | 'today' | 'urgent' | 'soon' | 'normal';
+  statusLabel: string;
+  isCreditCard: boolean;
+}
+
+export function getUpcomingDebtPayments(accounts: FinancialAccount[] = []): DebtPaymentInfo[] {
+  const today = getTodayString();
+  const [currentYear, currentMonthStr, currentDayStr] = today.split('-').map(Number);
+  
+  const debtAccounts = accounts.filter(
+    a => (a.type === 'credit_card' || a.type === 'loan' || a.type === 'debt') && a.balance > 0
+  );
+
+  const payments: DebtPaymentInfo[] = [];
+
+  debtAccounts.forEach(acc => {
+    let dueDay = acc.paymentDueDay;
+    if (!dueDay && acc.nextPaymentDate) {
+      dueDay = parseInt(acc.nextPaymentDate.substring(8, 10), 10);
+    }
+    if (!dueDay) dueDay = 20;
+
+    let dueYear = currentYear;
+    let dueMonth = currentMonthStr;
+
+    const daysInThisMonth = new Date(dueYear, dueMonth, 0).getDate();
+    const effectiveDay = Math.min(dueDay, daysInThisMonth);
+
+    let targetDateStr = `${dueYear}-${String(dueMonth).padStart(2, '0')}-${String(effectiveDay).padStart(2, '0')}`;
+    
+    if (currentDayStr > effectiveDay) {
+      const nextMonthDate = new Date(dueYear, dueMonth, 1);
+      dueYear = nextMonthDate.getFullYear();
+      dueMonth = nextMonthDate.getMonth() + 1;
+      const daysInNextMonth = new Date(dueYear, dueMonth, 0).getDate();
+      targetDateStr = `${dueYear}-${String(dueMonth).padStart(2, '0')}-${String(Math.min(dueDay, daysInNextMonth)).padStart(2, '0')}`;
+    }
+
+    const diffTime = new Date(targetDateStr).getTime() - new Date(today).getTime();
+    const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    let status: DebtPaymentInfo['status'] = 'normal';
+    let statusLabel = `через ${daysRemaining} дн.`;
+
+    if (daysRemaining < 0) {
+      status = 'overdue';
+      statusLabel = `Просрочено на ${Math.abs(daysRemaining)} дн.!`;
+    } else if (daysRemaining === 0) {
+      status = 'today';
+      statusLabel = 'Оплата СЕГОДНЯ!';
+    } else if (daysRemaining <= 3) {
+      status = 'urgent';
+      statusLabel = `Через ${daysRemaining} ${daysRemaining === 1 ? 'день' : 'дня'}!`;
+    } else if (daysRemaining <= 7) {
+      status = 'soon';
+      statusLabel = `Через ${daysRemaining} дн.`;
+    }
+
+    const paymentAmount = acc.monthlyPayment || Math.min(acc.balance, 3000);
+
+    payments.push({
+      account: acc,
+      paymentAmount,
+      dueDate: targetDateStr,
+      dueDay: effectiveDay,
+      daysRemaining,
+      status,
+      statusLabel,
+      isCreditCard: acc.type === 'credit_card'
+    });
+  });
+
+  return payments.sort((a, b) => a.daysRemaining - b.daysRemaining);
 }

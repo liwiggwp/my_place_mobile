@@ -272,7 +272,38 @@ export interface WaterSettings {
    FINANCE & EXPENSE/INCOME TRACKER TYPES
    ========================================== */
 
-export type TransactionType = 'expense' | 'income';
+export type TransactionType = 'expense' | 'income' | 'transfer';
+
+export type AccountType = 
+  | 'card'          // Дебетовая карта
+  | 'cash'          // Наличные (кошелек, конверт)
+  | 'savings'       // Заначка, накопительный счет, копилка
+  | 'credit_card'   // Кредитная карта (с лимитом и льготным периодом)
+  | 'loan'          // Кредит / Рассрочка / Ипотека
+  | 'debt';         // Долг / Заем
+
+export interface FinancialAccount {
+  id: string;
+  name: string; // e.g. "Тинькофф Black", "Заначка на отпуск", "Кредитка 120 дней"
+  type: AccountType;
+  balance: number; // Текущий баланс (для карт/наличных/копилок) или текущий остаток долга (для кредитов/кредиток)
+  currency: string; // '₽', '$', '€', '₸', 'Br'
+  color?: string; // hex color or gradient name
+  icon?: string; // Icon identifier
+  targetAmount?: number; // Целевая сумма для заначки/копилки
+  targetDate?: string; // Желаемая дата накопления (YYYY-MM-DD)
+  
+  // Поля для кредитов, кредитных карт и рассрочек:
+  creditLimit?: number; // Кредитный лимит (например 100 000 ₽)
+  monthlyPayment?: number; // Минимальный платеж или ежемесячный взнос (например 4 500 ₽)
+  paymentDueDay?: number; // День месяца для обязательного платежа (1-31)
+  nextPaymentDate?: string; // Ближайшая точная дата платежа (YYYY-MM-DD)
+  gracePeriodDays?: number; // Дней без процентов (например 55, 120)
+  interestRate?: number; // Процентная ставка (% годовых)
+  notes?: string;
+  isArchived?: boolean;
+  createdAt: string;
+}
 
 export interface FinancialTransaction {
   id: string;
@@ -282,7 +313,9 @@ export interface FinancialTransaction {
   date: string; // YYYY-MM-DD
   time?: string; // HH:mm
   title?: string;
-  account?: string; // e.g. "Карта", "Наличные", "Счет"
+  account?: string; // Название счета (обратная совместимость)
+  accountId?: string; // ID исходного счета
+  toAccountId?: string; // ID целевого счета (для переводов)
   createdAt: string;
 }
 
@@ -328,6 +361,7 @@ export interface AppData {
   tasks: TaskItem[];
   taskCategories?: TaskCategoryItem[];
   transactions?: FinancialTransaction[];
+  accounts?: FinancialAccount[];
   financeSettings?: FinanceSettings;
   notificationSettings: NotificationSettings;
 }
