@@ -12,7 +12,8 @@ import {
   Pill as PillIcon,
   Lightbulb,
   Minus,
-  Square
+  Square,
+  Wallet
 } from 'lucide-react';
 
 interface AddWidgetModalProps {
@@ -32,6 +33,14 @@ interface WidgetTemplate {
 }
 
 const AVAILABLE_TEMPLATES: WidgetTemplate[] = [
+  {
+    type: 'finance',
+    title: 'Финансы и Бюджет',
+    subtitle: 'Баланс, расходы, доходы и бюджет',
+    icon: <Wallet className="w-5 h-5 text-emerald-600" />,
+    defaultSize: 'medium',
+    description: 'Учет доходов и расходов, остаток месячного бюджета, последние траты и быстрое добавление чека.'
+  },
   {
     type: 'clock',
     title: 'Часы и Время',

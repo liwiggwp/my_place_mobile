@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { ManageDesktopsModal, renderDesktopIcon } from './ManageDesktopsModal';
 import { AddDesktopWidgetModal } from './AddDesktopWidgetModal';
+import { FinanceWidget } from '../finance/FinanceWidget';
 
 interface DesktopsViewProps {
   appData: AppData;
@@ -1631,6 +1632,41 @@ export const DesktopsView: React.FC<DesktopsViewProps> = ({
     );
   };
 
+  const renderFinanceWidget = (widget: WidgetConfig, idx: number) => {
+    const isDragged = dragSession?.widgetId === widget.id && dragSession.hasMoved;
+    const jiggleClass = isEditing ? (idx % 2 === 0 ? 'animate-wiggle' : 'animate-wiggle-alt') : '';
+    const dragStyle: React.CSSProperties = isDragged
+      ? {
+          position: 'fixed',
+          left: dragSession.currentX - dragSession.startX,
+          top: dragSession.currentY - dragSession.startY,
+          zIndex: 9999,
+          pointerEvents: 'none',
+          opacity: 0.92,
+          transform: 'scale(1.05)',
+          transition: 'none'
+        }
+      : {};
+
+    const financeTheme = appData.themeSettings?.finance || { primary: '#059669', secondary: '#065f46' };
+
+    return (
+      <FinanceWidget
+        key={widget.id}
+        widget={widget}
+        appData={appData}
+        isEditing={isEditing}
+        theme={financeTheme}
+        onNavigate={() => onNavigate('finance')}
+        renderEditControls={renderEditControls}
+        onPointerDown={e => handleCardPointerDown(e, widget.id)}
+        onPointerUp={handleCardPointerUp}
+        dragStyle={dragStyle}
+        jiggleClass={jiggleClass}
+      />
+    );
+  };
+
   const renderWidgetByConfig = (widget: WidgetConfig, idx: number) => {
     switch (widget.type) {
       case 'clock':
@@ -1643,6 +1679,8 @@ export const DesktopsView: React.FC<DesktopsViewProps> = ({
         return renderWaterWidget(widget, idx);
       case 'cycle':
         return renderCycleWidget(widget, idx);
+      case 'finance':
+        return renderFinanceWidget(widget, idx);
       case 'tip':
         return renderTipWidget(widget, idx);
       case 'divider':

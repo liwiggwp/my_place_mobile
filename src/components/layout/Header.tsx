@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProfile,
   onBackToHome
 }) => {
-  const isSubScreen = currentTab === 'cycle' || currentTab === 'pills' || currentTab === 'water' || currentTab === 'tasks';
+  const isSubScreen = currentTab === 'cycle' || currentTab === 'pills' || currentTab === 'water' || currentTab === 'tasks' || currentTab === 'finance';
 
   const getTabTitle = () => {
     switch (currentTab) {
@@ -36,6 +36,8 @@ export const Header: React.FC<HeaderProps> = ({
         return 'Таблетки и витамины';
       case 'water':
         return 'Водный Баланс';
+      case 'finance':
+        return 'Доходы и Расходы';
       case 'settings':
         return 'Настройки';
       default:

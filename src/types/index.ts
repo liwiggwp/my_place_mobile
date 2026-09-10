@@ -1,4 +1,4 @@
-export type TabType = 'home' | 'desktops' | 'cycle' | 'tasks' | 'pills' | 'water' | 'settings';
+export type TabType = 'home' | 'desktops' | 'cycle' | 'tasks' | 'pills' | 'water' | 'finance' | 'settings';
 
 /* ==========================================
    THEME SETTINGS / НАСТРОЙКА ЦВЕТОВЫХ ТЕМ
@@ -15,13 +15,14 @@ export interface AppThemeSettings {
   tasks?: DualColorTheme;   // optional override for Tasks
   water?: DualColorTheme;   // optional override for Water
   pills?: DualColorTheme;   // optional override for Pills
+  finance?: DualColorTheme; // optional override for Finance
 }
 
 /* ==========================================
    WIDGETS CONFIGURATION / НАСТРОЙКА ВИДЖЕТОВ
    ========================================== */
 
-export type WidgetType = 'cycle' | 'tasks' | 'water' | 'pills' | 'tip' | 'divider' | 'photo' | 'clock';
+export type WidgetType = 'cycle' | 'tasks' | 'water' | 'pills' | 'tip' | 'divider' | 'photo' | 'clock' | 'finance';
 export type WidgetSize = 'small' | 'medium' | 'large';
 
 export interface WidgetConfig {
@@ -268,6 +269,35 @@ export interface WaterSettings {
 }
 
 /* ==========================================
+   FINANCE & EXPENSE/INCOME TRACKER TYPES
+   ========================================== */
+
+export type TransactionType = 'expense' | 'income';
+
+export interface FinancialTransaction {
+  id: string;
+  type: TransactionType;
+  amount: number;
+  category: string;
+  date: string; // YYYY-MM-DD
+  time?: string; // HH:mm
+  title?: string;
+  account?: string; // e.g. "Карта", "Наличные", "Счет"
+  createdAt: string;
+}
+
+export interface CategoryBudget {
+  category: string;
+  limit: number;
+}
+
+export interface FinanceSettings {
+  currency: string; // '₽', '$', '€', '₸', 'Br' (default '₽')
+  monthlyBudgetLimit?: number; // e.g. 60000
+  categoryBudgets?: CategoryBudget[];
+}
+
+/* ==========================================
    GENERAL & NOTIFICATIONS
    ========================================== */
 
@@ -297,5 +327,7 @@ export interface AppData {
   waterSettings: WaterSettings;
   tasks: TaskItem[];
   taskCategories?: TaskCategoryItem[];
+  transactions?: FinancialTransaction[];
+  financeSettings?: FinanceSettings;
   notificationSettings: NotificationSettings;
 }

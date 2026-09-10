@@ -23,14 +23,17 @@ import {
 } from 'lucide-react';
 import { AddWidgetModal } from './AddWidgetModal';
 import { MyPlaceLogo } from '../common/MyPlaceLogo';
+import { FinanceWidget } from '../finance/FinanceWidget';
 
 interface HomeDashboardProps {
   appData: AppData;
   prediction: CyclePrediction;
-  onNavigate: (tab: 'cycle' | 'pills' | 'water' | 'tasks' | 'settings') => void;
+  onNavigate: (tab: 'cycle' | 'pills' | 'water' | 'tasks' | 'finance' | 'settings') => void;
   onQuickAddWater: (amount: number) => void;
   onLogPillTaken?: (pillId: string, scheduledTime: string) => void;
   onToggleTask?: (taskId: string) => void;
+  onQuickAddExpense?: () => void;
+  onQuickAddIncome?: () => void;
   onOpenProfile: () => void;
   onUpdateWidgets: (newConfig: WidgetConfig[]) => void;
 }
@@ -38,9 +41,10 @@ interface HomeDashboardProps {
 export const defaultWidgetsConfig: WidgetConfig[] = [
   { id: 'cycle', type: 'cycle', title: 'Мой Цикл', enabled: true, size: 'large', order: 0, row: 0, col: 0 },
   { id: 'tasks', type: 'tasks', title: 'Задачи и Планы', enabled: true, size: 'medium', order: 1, row: 1, col: 0 },
-  { id: 'water', type: 'water', title: 'Водный Баланс', enabled: true, size: 'medium', order: 2, row: 2, col: 0 },
-  { id: 'pills', type: 'pills', title: 'Лекарства и Витамины', enabled: true, size: 'medium', order: 3, row: 3, col: 0 },
-  { id: 'tip', type: 'tip', title: 'Совет Дня', enabled: true, size: 'small', order: 4, row: 4, col: 0 }
+  { id: 'finance', type: 'finance', title: 'Финансы и Бюджет', enabled: true, size: 'medium', order: 2, row: 2, col: 0 },
+  { id: 'water', type: 'water', title: 'Водный Баланс', enabled: true, size: 'medium', order: 3, row: 3, col: 0 },
+  { id: 'pills', type: 'pills', title: 'Лекарства и Витамины', enabled: true, size: 'medium', order: 4, row: 4, col: 0 },
+  { id: 'tip', type: 'tip', title: 'Совет Дня', enabled: true, size: 'small', order: 5, row: 5, col: 0 }
 ];
 
 interface DragSession {
@@ -60,6 +64,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onQuickAddWater,
   onLogPillTaken,
   onToggleTask,
+  onQuickAddExpense,
+  onQuickAddIncome,
   onOpenProfile,
   onUpdateWidgets
 }) => {
@@ -1503,12 +1509,50 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     );
   };
 
+  const renderFinanceWidget = (widget: WidgetConfig, idx: number) => {
+    const isDragged = dragSession?.widgetId === widget.id && dragSession.hasMoved;
+    const jiggleClass = isEditing ? (idx % 2 === 0 ? 'animate-wiggle' : 'animate-wiggle-alt') : '';
+    const dragStyle: React.CSSProperties = isDragged
+      ? {
+          position: 'fixed',
+          left: dragSession.currentX - dragSession.startX,
+          top: dragSession.currentY - dragSession.startY,
+          zIndex: 9999,
+          pointerEvents: 'none',
+          opacity: 0.92,
+          transform: 'scale(1.05)',
+          transition: 'none'
+        }
+      : {};
+
+    const financeTheme = appData.themeSettings?.finance || { primary: '#059669', secondary: '#065f46' };
+
+    return (
+      <FinanceWidget
+        key={widget.id}
+        widget={widget}
+        appData={appData}
+        isEditing={isEditing}
+        theme={financeTheme}
+        onNavigate={() => onNavigate('finance')}
+        onQuickAddExpense={onQuickAddExpense || (() => onNavigate('finance'))}
+        onQuickAddIncome={onQuickAddIncome || (() => onNavigate('finance'))}
+        renderEditControls={renderEditControls}
+        onPointerDown={e => handleCardPointerDown(e, widget.id)}
+        onPointerUp={handleCardPointerUp}
+        dragStyle={dragStyle}
+        jiggleClass={jiggleClass}
+      />
+    );
+  };
+
   const renderWidgetByConfig = (widget: WidgetConfig, idx: number) => {
     switch (widget.type) {
       case 'cycle': return renderCycleWidget(widget, idx);
       case 'tasks': return renderTasksWidget(widget, idx);
       case 'water': return renderWaterWidget(widget, idx);
       case 'pills': return renderPillsWidget(widget, idx);
+      case 'finance': return renderFinanceWidget(widget, idx);
       case 'tip': return renderTipWidget(widget, idx);
       case 'divider': return renderDividerWidget(widget, idx);
       case 'photo': return renderPhotoWidget(widget, idx);

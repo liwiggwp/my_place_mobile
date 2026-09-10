@@ -14,7 +14,10 @@ import type {
   AppThemeSettings,
   TaskItem,
   TaskCategoryItem,
-  DashboardDesktop
+  DashboardDesktop,
+  FinancialTransaction,
+  FinanceSettings,
+  TransactionType
 } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useSoundEffects } from './hooks/useSoundEffects';
@@ -22,6 +25,7 @@ import { useNotifications } from './hooks/useNotifications';
 import { getCyclePrediction, getLatestPeriod } from './utils/cycleCalculations';
 import { addDays, getTodayString } from './utils/dateUtils';
 import { defaultThemeSettings, getScreenTheme } from './utils/themeUtils';
+import { getDefaultSampleTransactions } from './utils/financeUtils';
 import confetti from 'canvas-confetti';
 import { Pill as PillIcon, ChevronDown } from 'lucide-react';
 
@@ -45,6 +49,11 @@ import { SymptomModal } from './components/cycle/SymptomModal';
 import { TasksView } from './components/tasks/TasksView';
 import { TaskModal } from './components/tasks/TaskModal';
 import { ManageCategoriesModal } from './components/tasks/ManageCategoriesModal';
+
+// Finance Components
+import { FinanceView } from './components/finance/FinanceView';
+import { TransactionModal } from './components/finance/TransactionModal';
+import { BudgetModal } from './components/finance/BudgetModal';
 
 // Pill Components
 import { PillSummary } from './components/pills/PillSummary';
@@ -200,6 +209,12 @@ const defaultInitialData: AppData = {
     enabledReminders: true,
     glassSize: 250
   },
+  transactions: getDefaultSampleTransactions(),
+  financeSettings: {
+    currency: '₽',
+    monthlyBudgetLimit: 60000,
+    categoryBudgets: []
+  },
   notificationSettings: {
     enabled: true,
     soundEnabled: true,
@@ -228,6 +243,12 @@ export function App() {
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
+
+  // Finance modal state
+  const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<FinancialTransaction | null>(null);
+  const [transactionDefaultType, setTransactionDefaultType] = useState<TransactionType>('expense');
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
 
   // Tasks modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -380,6 +401,7 @@ export function App() {
   const tasksTheme = getScreenTheme(appData.themeSettings, 'tasks');
   const waterTheme = getScreenTheme(appData.themeSettings, 'water');
   const pillsTheme = getScreenTheme(appData.themeSettings, 'pills');
+  const financeTheme = getScreenTheme(appData.themeSettings, 'finance');
 
   // Water calculations
   const todayWaterLogs = appData.waterLogs.filter(w => w.date === todayStr);
@@ -743,14 +765,76 @@ export function App() {
     }));
   };
 
+  const handleOpenAddTransaction = (type: TransactionType = 'expense') => {
+    setTransactionDefaultType(type);
+    setTransactionToEdit(null);
+    setIsTransactionModalOpen(true);
+  };
+
+  const handleEditTransaction = (tx: FinancialTransaction) => {
+    setTransactionToEdit(tx);
+    setIsTransactionModalOpen(true);
+  };
+
+  const handleSaveTransaction = (
+    txData: Omit<FinancialTransaction, 'id' | 'createdAt'>,
+    editId?: string
+  ) => {
+    playPillChime();
+    triggerVibrate();
+
+    setAppData(prev => {
+      const currentList = prev.transactions || [];
+      if (editId) {
+        return {
+          ...prev,
+          transactions: currentList.map(t =>
+            t.id === editId
+              ? { ...t, ...txData }
+              : t
+          )
+        };
+      } else {
+        const newTx: FinancialTransaction = {
+          ...txData,
+          id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          createdAt: new Date().toISOString()
+        };
+        return {
+          ...prev,
+          transactions: [newTx, ...currentList]
+        };
+      }
+    });
+  };
+
+  const handleDeleteTransaction = (id: string) => {
+    playSoftClick();
+    triggerVibrate();
+    setAppData(prev => ({
+      ...prev,
+      transactions: (prev.transactions || []).filter(t => t.id !== id)
+    }));
+  };
+
+  const handleSaveFinanceSettings = (newSettings: FinanceSettings) => {
+    playPillChime();
+    triggerVibrate();
+    setAppData(prev => ({
+      ...prev,
+      financeSettings: newSettings
+    }));
+  };
+
   const handleClearExamplesOnly = () => {
-    if (confirm('Очистить тестовые примеры лекарств, задач и счетчики на сегодня?')) {
+    if (confirm('Очистить тестовые примеры лекарств, задач, расходов и счетчики на сегодня?')) {
       setAppData(prev => ({
         ...prev,
         pills: [],
         pillLogs: [],
         waterLogs: [],
-        tasks: []
+        tasks: [],
+        transactions: []
       }));
       alert('Тестовые данные успешно очищены!');
     }
@@ -797,7 +881,8 @@ export function App() {
           currentTab === 'cycle' ? cycleTheme :
           currentTab === 'tasks' ? tasksTheme :
           currentTab === 'water' ? waterTheme :
-          currentTab === 'pills' ? pillsTheme : globalTheme
+          currentTab === 'pills' ? pillsTheme :
+          currentTab === 'finance' ? financeTheme : globalTheme
         }
         onOpenInstall={() => setIsInstallGuideOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
@@ -821,6 +906,8 @@ export function App() {
             onQuickAddWater={amount => handleAddWater(amount, 'water')}
             onLogPillTaken={(pillId, scheduledTime) => handleLogPillStatus(pillId, scheduledTime, 'taken')}
             onToggleTask={handleToggleTask}
+            onQuickAddExpense={() => handleOpenAddTransaction('expense')}
+            onQuickAddIncome={() => handleOpenAddTransaction('income')}
             onOpenProfile={() => setIsProfileOpen(true)}
             onUpdateWidgets={handleSaveWidgetsConfig}
           />
@@ -1009,6 +1096,21 @@ export function App() {
           </div>
         )}
 
+        {/* SUB-SCREEN: FULL FINANCE */}
+        {currentTab === 'finance' && (
+          <div className="animate-fade-in">
+            <FinanceView
+              transactions={appData.transactions || []}
+              settings={appData.financeSettings}
+              theme={financeTheme}
+              onOpenAddTransaction={handleOpenAddTransaction}
+              onEditTransaction={handleEditTransaction}
+              onDeleteTransaction={handleDeleteTransaction}
+              onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+            />
+          </div>
+        )}
+
         {/* TAB 2: SETTINGS */}
         {currentTab === 'settings' && (
           <div className="animate-fade-in">
@@ -1043,6 +1145,25 @@ export function App() {
       />
 
       {/* Modals */}
+      <TransactionModal
+        isOpen={isTransactionModalOpen}
+        transactionToEdit={transactionToEdit}
+        defaultType={transactionDefaultType}
+        currency={appData.financeSettings?.currency || '₽'}
+        theme={financeTheme}
+        onSave={handleSaveTransaction}
+        onDelete={handleDeleteTransaction}
+        onClose={() => setIsTransactionModalOpen(false)}
+      />
+
+      <BudgetModal
+        isOpen={isBudgetModalOpen}
+        settings={appData.financeSettings}
+        theme={financeTheme}
+        onSave={handleSaveFinanceSettings}
+        onClose={() => setIsBudgetModalOpen(false)}
+      />
+
       <ThemeCustomizerModal
         isOpen={isThemeCustomizerOpen}
         themeSettings={appData.themeSettings}
