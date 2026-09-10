@@ -1,4 +1,18 @@
-export type TabType = 'home' | 'desktops' | 'cycle' | 'tasks' | 'pills' | 'water' | 'finance' | 'settings';
+import type { NotionPage, NotionDatabase } from './notion';
+export * from './notion';
+
+export type TabType = 
+  | 'workspace' 
+  | 'home' 
+  | 'desktops' 
+  | 'cycle' 
+  | 'tasks' 
+  | 'pills' 
+  | 'water' 
+  | 'finance' 
+  | 'settings' 
+  | 'notion_page' 
+  | 'notion_database';
 
 /* ==========================================
    THEME SETTINGS / НАСТРОЙКА ЦВЕТОВЫХ ТЕМ
@@ -363,5 +377,7 @@ export interface AppData {
   transactions?: FinancialTransaction[];
   accounts?: FinancialAccount[];
   financeSettings?: FinanceSettings;
+  pages?: NotionPage[];
+  databases?: NotionDatabase[];
   notificationSettings: NotificationSettings;
 }

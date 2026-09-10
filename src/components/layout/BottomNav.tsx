@@ -1,6 +1,6 @@
 import React from 'react';
 import type { TabType, DualColorTheme } from '../../types';
-import { LayoutGrid, Layers, SlidersHorizontal } from 'lucide-react';
+import { FolderKanban, Layers, SlidersHorizontal } from 'lucide-react';
 
 interface BottomNavProps {
   currentTab: TabType;
@@ -16,9 +16,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 }) => {
   const tabs = [
     {
-      id: 'home' as TabType,
-      label: 'Обзор',
-      icon: LayoutGrid
+      id: 'workspace' as TabType,
+      label: 'Пространство',
+      icon: FolderKanban
     },
     {
       id: 'desktops' as TabType,
@@ -42,7 +42,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               ? currentTab === 'desktops'
               : tab.id === 'settings'
               ? currentTab === 'settings'
-              : currentTab !== 'desktops' && currentTab !== 'settings';
+              : currentTab === 'workspace' || (currentTab !== 'desktops' && currentTab !== 'settings');
 
           return (
             <button

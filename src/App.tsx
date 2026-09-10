@@ -10,7 +10,6 @@ import type {
   WaterLog,
   DrinkType,
   UserProfile,
-  WidgetConfig,
   AppThemeSettings,
   TaskItem,
   TaskCategoryItem,
@@ -28,6 +27,8 @@ import { getCyclePrediction, getLatestPeriod } from './utils/cycleCalculations';
 import { addDays, getTodayString } from './utils/dateUtils';
 import { defaultThemeSettings, getScreenTheme } from './utils/themeUtils';
 import { getDefaultSampleTransactions, getDefaultSampleAccounts } from './utils/financeUtils';
+import { DEFAULT_WORKSPACE_PAGES, DEFAULT_DATABASES } from './utils/notionTemplates';
+import type { NotionPage, NotionDatabase, WorkspaceTemplate } from './types/notion';
 import confetti from 'canvas-confetti';
 import { Pill as PillIcon, ChevronDown } from 'lucide-react';
 
@@ -37,8 +38,13 @@ import { BottomNav } from './components/layout/BottomNav';
 import { NotificationBanner } from './components/layout/NotificationBanner';
 import { InstallPrompt } from './components/layout/InstallPrompt';
 
+// Notion Workspace & Builder Components
+import { WorkspaceView } from './components/notion/WorkspaceView';
+import { PageEditorView } from './components/notion/PageEditorView';
+import { DatabaseView } from './components/notion/DatabaseView';
+
 // Home Dashboard & Desktops
-import { HomeDashboard, defaultWidgetsConfig } from './components/home/HomeDashboard';
+import { defaultWidgetsConfig } from './components/home/HomeDashboard';
 import { DesktopsView } from './components/desktops/DesktopsView';
 
 // Cycle Components
@@ -221,6 +227,8 @@ const defaultInitialData: AppData = {
     monthlyBudgetLimit: 60000,
     categoryBudgets: []
   },
+  pages: DEFAULT_WORKSPACE_PAGES,
+  databases: DEFAULT_DATABASES,
   notificationSettings: {
     enabled: true,
     soundEnabled: true,
@@ -235,7 +243,8 @@ const defaultInitialData: AppData = {
 
 export function App() {
   const [appData, setAppData] = useLocalStorage<AppData>('myplace_app_data_v3', defaultInitialData);
-  const [currentTab, setCurrentTab] = useState<TabType>('home');
+  const [currentTab, setCurrentTab] = useState<TabType>('workspace');
+  const [activeNotionPageId, setActiveNotionPageId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
   const [selectedWaterDate, setSelectedWaterDate] = useState<string>(getTodayString());
   const [selectedPillDate, setSelectedPillDate] = useState<string>(getTodayString());
@@ -729,13 +738,6 @@ export function App() {
     }));
   };
 
-  const handleSaveWidgetsConfig = (newConfig: WidgetConfig[]) => {
-    setAppData(prev => ({
-      ...prev,
-      widgetsConfig: newConfig
-    }));
-  };
-
   const handleSelectCustomDesktop = (id: string) => {
     setAppData(prev => ({
       ...prev,
@@ -1028,6 +1030,244 @@ export function App() {
   };
 
   /* ==========================================
+     NOTION WORKSPACE HANDLERS
+     ========================================== */
+
+  const pages = appData.pages || DEFAULT_WORKSPACE_PAGES;
+  const databases = appData.databases || DEFAULT_DATABASES;
+  const activePage = pages.find(p => p.id === activeNotionPageId);
+  const activeDatabase = activePage?.databaseId
+    ? databases.find(d => d.id === activePage.databaseId)
+    : databases[0];
+
+  const handleOpenNotionPage = (page: NotionPage) => {
+    playSoftClick();
+    setActiveNotionPageId(page.id);
+    if (page.type === 'custom_database') {
+      setCurrentTab('notion_database');
+    } else if (page.type === 'custom_page') {
+      setCurrentTab('notion_page');
+    } else if (page.type === 'builtin_hub' && page.builtinHubType) {
+      setCurrentTab(page.builtinHubType as TabType);
+    }
+  };
+
+  const handleOpenBuiltinHub = (hubType: string) => {
+    playSoftClick();
+    setCurrentTab(hubType as TabType);
+  };
+
+  const handleAddCustomPage = (title = 'Новая страница', icon = '📝') => {
+    playSoftClick();
+    const newPage: NotionPage = {
+      id: `page-${Date.now()}`,
+      title,
+      icon,
+      type: 'custom_page',
+      isPinned: false,
+      blocks: [
+        {
+          id: `blk-${Date.now()}`,
+          type: 'callout',
+          icon: '💡',
+          color: 'indigo',
+          content: 'Нажмите, чтобы отредактировать заголовок или добавить блоки.',
+          createdAt: new Date().toISOString()
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    setAppData(prev => ({
+      ...prev,
+      pages: [...(prev.pages || DEFAULT_WORKSPACE_PAGES), newPage]
+    }));
+
+    setActiveNotionPageId(newPage.id);
+    setCurrentTab('notion_page');
+  };
+
+  const handleAddCustomDatabase = (name = 'Новая база данных', icon = '📊') => {
+    playSoftClick();
+    const newDbId = `db-${Date.now()}`;
+    const newDb: NotionDatabase = {
+      id: newDbId,
+      name,
+      icon,
+      properties: [
+        {
+          id: `prop-status`,
+          name: 'Статус',
+          type: 'select',
+          options: [
+            { id: 'opt-todo', label: 'В планах', color: 'bg-amber-100 text-amber-800' },
+            { id: 'opt-progress', label: 'В работе', color: 'bg-blue-100 text-blue-800' },
+            { id: 'opt-done', label: 'Готово', color: 'bg-emerald-100 text-emerald-800' }
+          ]
+        },
+        {
+          id: `prop-date`,
+          name: 'Дата / Дедлайн',
+          type: 'date'
+        },
+        {
+          id: `prop-rating`,
+          name: 'Приоритет',
+          type: 'rating'
+        }
+      ],
+      items: [
+        {
+          id: `item-${Date.now()}`,
+          title: 'Пример карточки',
+          properties: {
+            'prop-status': 'opt-todo',
+            'prop-date': getTodayString(),
+            'prop-rating': 4
+          },
+          blocks: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ],
+      defaultView: 'board',
+      groupByPropertyId: 'prop-status',
+      datePropertyId: 'prop-date'
+    };
+
+    const newPage: NotionPage = {
+      id: `page-${Date.now()}`,
+      title: name,
+      icon,
+      type: 'custom_database',
+      databaseId: newDbId,
+      isPinned: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    setAppData(prev => ({
+      ...prev,
+      databases: [...(prev.databases || DEFAULT_DATABASES), newDb],
+      pages: [...(prev.pages || DEFAULT_WORKSPACE_PAGES), newPage]
+    }));
+
+    setActiveNotionPageId(newPage.id);
+    setCurrentTab('notion_database');
+  };
+
+  const handleApplyTemplate = (tmpl: WorkspaceTemplate) => {
+    playSoftClick();
+    if (tmpl.pageType === 'builtin_hub' && tmpl.builtinHubType) {
+      setCurrentTab(tmpl.builtinHubType as TabType);
+      return;
+    }
+
+    if (tmpl.pageType === 'custom_database' && tmpl.initialDatabase) {
+      const dbId = `db-${Date.now()}`;
+      const newDb: NotionDatabase = {
+        id: dbId,
+        name: tmpl.title,
+        icon: tmpl.icon,
+        description: tmpl.description,
+        properties: tmpl.initialDatabase.properties,
+        items: tmpl.initialDatabase.items.map((it, idx) => ({
+          ...it,
+          id: `item-${Date.now()}-${idx}`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        })),
+        defaultView: tmpl.initialDatabase.defaultView,
+        groupByPropertyId: tmpl.initialDatabase.groupByPropertyId,
+        datePropertyId: tmpl.initialDatabase.datePropertyId
+      };
+
+      const newPage: NotionPage = {
+        id: `page-${Date.now()}`,
+        title: tmpl.title,
+        icon: tmpl.icon,
+        type: 'custom_database',
+        databaseId: dbId,
+        isPinned: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      setAppData(prev => ({
+        ...prev,
+        databases: [...(prev.databases || DEFAULT_DATABASES), newDb],
+        pages: [...(prev.pages || DEFAULT_WORKSPACE_PAGES), newPage]
+      }));
+
+      setActiveNotionPageId(newPage.id);
+      setCurrentTab('notion_database');
+      return;
+    }
+
+    if (tmpl.pageType === 'custom_page') {
+      const newPage: NotionPage = {
+        id: `page-${Date.now()}`,
+        title: tmpl.title,
+        icon: tmpl.icon,
+        type: 'custom_page',
+        isPinned: false,
+        blocks: (tmpl.initialBlocks || []).map((b, idx) => ({
+          ...b,
+          id: `blk-${Date.now()}-${idx}`,
+          createdAt: new Date().toISOString()
+        })),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      setAppData(prev => ({
+        ...prev,
+        pages: [...(prev.pages || DEFAULT_WORKSPACE_PAGES), newPage]
+      }));
+
+      setActiveNotionPageId(newPage.id);
+      setCurrentTab('notion_page');
+    }
+  };
+
+  const handleUpdateNotionPage = (updatedPage: NotionPage) => {
+    setAppData(prev => ({
+      ...prev,
+      pages: (prev.pages || DEFAULT_WORKSPACE_PAGES).map(p =>
+        p.id === updatedPage.id ? updatedPage : p
+      )
+    }));
+  };
+
+  const handleUpdateNotionDatabase = (updatedDb: NotionDatabase) => {
+    setAppData(prev => ({
+      ...prev,
+      databases: (prev.databases || DEFAULT_DATABASES).map(d =>
+        d.id === updatedDb.id ? updatedDb : d
+      )
+    }));
+  };
+
+  const handleDeleteNotionPage = (id: string) => {
+    setAppData(prev => ({
+      ...prev,
+      pages: (prev.pages || DEFAULT_WORKSPACE_PAGES).filter(p => p.id !== id)
+    }));
+    setCurrentTab('workspace');
+    setActiveNotionPageId(null);
+  };
+
+  const handleTogglePinNotionPage = (id: string) => {
+    setAppData(prev => ({
+      ...prev,
+      pages: (prev.pages || DEFAULT_WORKSPACE_PAGES).map(p =>
+        p.id === id ? { ...p, isPinned: !p.isPinned } : p
+      )
+    }));
+  };
+
+  /* ==========================================
      RENDER
      ========================================== */
 
@@ -1039,6 +1279,13 @@ export function App() {
       {/* Header */}
       <Header
         currentTab={currentTab}
+        customTitle={
+          currentTab === 'notion_page'
+            ? `${activePage?.icon || '📝'} ${activePage?.title || 'Страница'}`
+            : currentTab === 'notion_database'
+            ? `${activeDatabase?.icon || '📊'} ${activeDatabase?.name || 'База'}`
+            : undefined
+        }
         avatarEmoji={profile.avatarEmoji}
         theme={
           currentTab === 'cycle' ? cycleTheme :
@@ -1051,28 +1298,51 @@ export function App() {
         onOpenProfile={() => setIsProfileOpen(true)}
         onBackToHome={() => {
           playSoftClick();
-          setCurrentTab('home');
+          setCurrentTab('workspace');
         }}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 px-4 md:px-6 py-4 space-y-4 pb-safe-nav">
-        {/* TAB 1: HOME WIDGETS DASHBOARD */}
-        {currentTab === 'home' && (
-          <HomeDashboard
+        {/* TAB 1: NOTION WORKSPACE */}
+        {(currentTab === 'workspace' || currentTab === 'home') && (
+          <WorkspaceView
+            pages={pages}
+            databases={databases}
+            onOpenPage={handleOpenNotionPage}
+            onOpenBuiltinHub={handleOpenBuiltinHub}
+            onAddCustomPage={handleAddCustomPage}
+            onAddCustomDatabase={handleAddCustomDatabase}
+            onApplyTemplate={handleApplyTemplate}
+            onDeletePage={handleDeleteNotionPage}
+            onTogglePinPage={handleTogglePinNotionPage}
+          />
+        )}
+
+        {/* NOTION PAGE EDITOR */}
+        {currentTab === 'notion_page' && activePage && (
+          <PageEditorView
+            page={activePage}
             appData={appData}
-            prediction={prediction}
-            onNavigate={tab => {
+            onUpdatePage={handleUpdateNotionPage}
+            onDeletePage={handleDeleteNotionPage}
+            onNavigateBuiltin={handleOpenBuiltinHub}
+            onBack={() => {
               playSoftClick();
-              setCurrentTab(tab);
+              setCurrentTab('workspace');
             }}
-            onQuickAddWater={amount => handleAddWater(amount, 'water')}
-            onLogPillTaken={(pillId, scheduledTime) => handleLogPillStatus(pillId, scheduledTime, 'taken')}
-            onToggleTask={handleToggleTask}
-            onQuickAddExpense={() => handleOpenAddTransaction('expense')}
-            onQuickAddIncome={() => handleOpenAddTransaction('income')}
-            onOpenProfile={() => setIsProfileOpen(true)}
-            onUpdateWidgets={handleSaveWidgetsConfig}
+          />
+        )}
+
+        {/* NOTION DATABASE VIEW */}
+        {currentTab === 'notion_database' && activeDatabase && (
+          <DatabaseView
+            database={activeDatabase}
+            onUpdateDatabase={handleUpdateNotionDatabase}
+            onBack={() => {
+              playSoftClick();
+              setCurrentTab('workspace');
+            }}
           />
         )}
 

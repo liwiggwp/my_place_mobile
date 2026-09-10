@@ -6,6 +6,7 @@ import { UserAvatar } from '../common/UserAvatar';
 
 interface HeaderProps {
   currentTab: string;
+  customTitle?: string;
   avatarEmoji?: string;
   theme?: DualColorTheme;
   onOpenInstall?: () => void;
@@ -15,15 +16,27 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentTab,
+  customTitle,
   avatarEmoji = 'user',
   theme = { primary: '#203A5F', secondary: '#595959' },
   onOpenProfile,
   onBackToHome
 }) => {
-  const isSubScreen = currentTab === 'cycle' || currentTab === 'pills' || currentTab === 'water' || currentTab === 'tasks' || currentTab === 'finance';
+  const isSubScreen = 
+    currentTab === 'cycle' || 
+    currentTab === 'pills' || 
+    currentTab === 'water' || 
+    currentTab === 'tasks' || 
+    currentTab === 'finance' ||
+    currentTab === 'notion_page' ||
+    currentTab === 'notion_database';
 
   const getTabTitle = () => {
+    if (customTitle) return customTitle;
+
     switch (currentTab) {
+      case 'workspace':
+        return 'MyPlace';
       case 'home':
         return 'MyPlace';
       case 'desktops':
@@ -37,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
       case 'water':
         return 'Водный Баланс';
       case 'finance':
-        return 'Доходы и Расходы';
+        return 'Финансы и Бюджет';
       case 'settings':
         return 'Настройки';
       default:
