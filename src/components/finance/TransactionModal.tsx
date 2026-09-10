@@ -122,7 +122,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   };
 
   const handleAddPreset = (val: number) => {
-    const current = parseFloat(amount) || 0;
+    const clean = amount.replace(/\s+/g, '').replace(',', '.');
+    const current = parseFloat(clean) || 0;
     setAmount((current + val).toString());
   };
 
@@ -231,9 +232,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 {type === 'expense' ? '-' : '+'}
               </span>
               <input
-                type="number"
-                step="any"
-                min="0"
+                type="text"
+                inputMode="decimal"
                 required
                 autoFocus
                 placeholder="0"

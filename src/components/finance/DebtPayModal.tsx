@@ -150,9 +150,8 @@ export const DebtPayModal: React.FC<DebtPayModalProps> = ({
             </label>
             <div className="flex items-center justify-center gap-2">
               <input
-                type="number"
-                step="any"
-                min="0"
+                type="text"
+                inputMode="decimal"
                 required
                 autoFocus
                 placeholder="0"

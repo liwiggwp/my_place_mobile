@@ -261,9 +261,8 @@ export const AccountModal: React.FC<AccountModalProps> = ({
             </label>
             <div className="flex items-center justify-center gap-2">
               <input
-                type="number"
-                step="any"
-                min="0"
+                type="text"
+                inputMode="decimal"
                 placeholder="0"
                 value={balance}
                 onChange={e => setBalance(e.target.value)}
@@ -285,8 +284,8 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-amber-800">Сумма цели ({currency})</label>
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="100 000"
                     value={targetAmount}
                     onChange={e => setTargetAmount(e.target.value)}
@@ -321,10 +320,8 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                   <label className="text-[11px] font-bold text-rose-800">День платежа в месяце</label>
                   <div className="flex items-center gap-1.5">
                     <input
-                      type="number"
-                      min="1"
-                      max="31"
-                      required
+                      type="text"
+                      inputMode="numeric"
                       placeholder="20"
                       value={paymentDueDay}
                       onChange={e => setPaymentDueDay(e.target.value)}
@@ -340,8 +337,8 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                     {type === 'credit_card' ? 'Мин. платеж' : 'Ежемесячный взнос'}
                   </label>
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="3 500"
                     value={monthlyPayment}
                     onChange={e => setMonthlyPayment(e.target.value)}
@@ -355,8 +352,8 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                     {type === 'credit_card' ? 'Кредитный лимит' : 'Сумма кредита'}
                   </label>
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="100 000"
                     value={creditLimit}
                     onChange={e => setCreditLimit(e.target.value)}
@@ -370,8 +367,8 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                     <label className="text-[11px] font-bold text-rose-800">Беспроцентный период</label>
                     <div className="flex items-center gap-1.5">
                       <input
-                        type="number"
-                        min="0"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="120"
                         value={gracePeriodDays}
                         onChange={e => setGracePeriodDays(e.target.value)}
@@ -385,6 +382,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                     <label className="text-[11px] font-bold text-rose-800">Ставка (% годовых)</label>
                     <input
                       type="text"
+                      inputMode="decimal"
                       placeholder="14.5"
                       value={interestRate}
                       onChange={e => setInterestRate(e.target.value)}

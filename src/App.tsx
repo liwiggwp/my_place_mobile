@@ -1095,6 +1095,8 @@ export function App() {
             onQuickAddWater={amount => handleAddWater(amount, 'water')}
             onLogPillTaken={(pillId, scheduledTime) => handleLogPillStatus(pillId, scheduledTime, 'taken')}
             onToggleTask={handleToggleTask}
+            onQuickAddExpense={() => handleOpenAddTransaction('expense')}
+            onQuickAddIncome={() => handleOpenAddTransaction('income')}
           />
         )}
 

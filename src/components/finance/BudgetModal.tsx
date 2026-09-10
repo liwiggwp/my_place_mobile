@@ -115,9 +115,8 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
             </label>
             <div className="flex items-center justify-center gap-2">
               <input
-                type="number"
-                min="0"
-                step="1000"
+                type="text"
+                inputMode="decimal"
                 required
                 placeholder="60000"
                 value={monthlyLimit}
@@ -176,7 +175,8 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       placeholder="без лимита"
                       value={categoryBudgets[cat.id] || ''}
                       onChange={e => handleCategoryLimitChange(cat.id, e.target.value)}

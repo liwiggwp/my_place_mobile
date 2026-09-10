@@ -53,7 +53,8 @@ export const TransferModal: React.FC<TransferModalProps> = ({
   if (!isOpen) return null;
 
   const handleAddPreset = (val: number) => {
-    const current = parseFloat(amount) || 0;
+    const clean = amount.replace(/\s+/g, '').replace(',', '.');
+    const current = parseFloat(clean) || 0;
     setAmount((current + val).toString());
   };
 
@@ -230,9 +231,8 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             </label>
             <div className="flex items-center justify-center gap-2">
               <input
-                type="number"
-                step="any"
-                min="0"
+                type="text"
+                inputMode="decimal"
                 required
                 autoFocus
                 placeholder="0"

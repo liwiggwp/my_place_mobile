@@ -38,6 +38,8 @@ interface DesktopsViewProps {
   onQuickAddWater: (amount: number) => void;
   onLogPillTaken?: (pillId: string, scheduledTime: string) => void;
   onToggleTask?: (taskId: string) => void;
+  onQuickAddExpense?: () => void;
+  onQuickAddIncome?: () => void;
 }
 
 interface DragSession {
@@ -68,7 +70,9 @@ export const DesktopsView: React.FC<DesktopsViewProps> = ({
   onNavigate,
   onQuickAddWater,
   onLogPillTaken,
-  onToggleTask
+  onToggleTask,
+  onQuickAddExpense,
+  onQuickAddIncome
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -1658,6 +1662,8 @@ export const DesktopsView: React.FC<DesktopsViewProps> = ({
         isEditing={isEditing}
         theme={financeTheme}
         onNavigate={() => onNavigate('finance')}
+        onQuickAddExpense={onQuickAddExpense || (() => onNavigate('finance'))}
+        onQuickAddIncome={onQuickAddIncome || (() => onNavigate('finance'))}
         renderEditControls={renderEditControls}
         onPointerDown={e => handleCardPointerDown(e, widget.id)}
         onPointerUp={handleCardPointerUp}

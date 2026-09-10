@@ -121,7 +121,7 @@ export function calculateMonthlyStats(
       cur.amount += amt;
       cur.count += 1;
       incomeCategoryMap.set(t.category, cur);
-    } else {
+    } else if (t.type === 'expense') {
       totalExpense += amt;
       const cur = expenseCategoryMap.get(t.category) || { amount: 0, count: 0 };
       cur.amount += amt;
@@ -183,7 +183,9 @@ export function calculateMonthlyStats(
 export function calculateTotalBalance(transactions: FinancialTransaction[] = []): number {
   return transactions.reduce((acc, t) => {
     const amt = Math.abs(t.amount || 0);
-    return t.type === 'income' ? acc + amt : acc - amt;
+    if (t.type === 'income') return acc + amt;
+    if (t.type === 'expense') return acc - amt;
+    return acc;
   }, 0);
 }
 
@@ -196,7 +198,7 @@ export function calculateTodayStats(transactions: FinancialTransaction[] = [], t
   todayList.forEach(t => {
     const amt = Math.abs(t.amount || 0);
     if (t.type === 'income') todayIncome += amt;
-    else todayExpense += amt;
+    else if (t.type === 'expense') todayExpense += amt;
   });
 
   return {
